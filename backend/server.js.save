@@ -1,17 +1,12 @@
 var PORT = process.env.PORT || 3000; // take port from heroku or for loacalhost
-var SocketIOFileUpload = require('socketio-file-upload');
-//var express = require("express");
-//var app = express()
-//    .use(SocketIOFileUpload.router)
-//    .listen(PORT);
+var express = require("express");
 //var app = express(); // express app which is used boilerplate for HTTP
 //var http = require("http").Server(app);
 
 var http = require("http").Server();
 
-//moment js for timestamps
+//moment js
 var moment = require("moment");
-const fs = require('fs');
 
 var clientInfo = {};
 
@@ -23,14 +18,6 @@ var io = require("socket.io")(http, {
   }
 });
 
-var files = {}, 
-    struct = { 
-        name: null, 
-        type: null, 
-        size: 0, 
-        data: [], 
-        slice: 0, 
-    };
 
 // expose the folder via express thought
 //app.use(express.static(__dirname + '/public'));
@@ -64,61 +51,8 @@ function sendCurrentUsers(socket) { // loading current users
 
 
 // io.on listens for events
-io.sockets.on("connection", function(socket) {
-  console.log("User is connected");
-
-
-  var uploader = new SocketIOFileUpload();
-  uploader.dir = "/home/cloud/live/backend/data";
-  uploader.listen(socket);
-  
-  uploader.on("start", function(event){
-    console.log(event);
-  });
-
-  uploader.on("saved", function(event){
-    console.log(event.file);
-  });
-
-  // Error handler:
-  uploader.on("error", function(event){
-    console.log("Error from uploader", event);
-  });
-
-  socket.on('upload slice', function(input) {
-      var userInfo = clientInfo[socket.id];
-      console.log("Nice nice.")
-      if (!files[input.name]) {
-        files[input.name] = Object.assign({}, struct, input);  //Lav ny files (struct) med navn data.name
-        files[input.name].data = []; 
-      }
-
-      input.data = new Buffer(new Uint8Array(input.data)); //Fix buffer til hvad end man bruger i dag
-
-      files[input.name].data.push(input.data); 
-      files[input.name].slice++;
-
-      if (files[input.name].slice * 100000 >= files[input.name].size) {  //Hvis vi ændrer slice størrelse skal den ændres her
-        //do something with the data 
-        socket.emit('end upload'); 
-
-        fs.writeFile('/home/cloud/live/frontend/data/' + files[input.name].name, files[input.name].data[0], FileSaveCallback);
-        
-        console.log("data er blevet uploadet. Nice nice.")
-      } else { 
-        socket.emit('request slice upload', { 
-            currentSlice: files[input.name].slice 
-        });  
-      }
-
-      io.in(userInfo.room).emit("message", {
-        text: input.name + " was sent" + " from user: " + userInfo.name,
-        name: "System",
-        timestamp: moment().valueOf()        
-      });
-
-  });
-
+io.on("connection", function(socket) {
+  console.log("User is connected to room " + clientInfo[socket.id].room);
 
   //for disconnection
   socket.on("disconnect", function() {
@@ -131,11 +65,11 @@ io.sockets.on("connection", function(socket) {
         name: "System",
         timestamp: moment().valueOf()
       });
-      console.log("User: " + userdata.name + " has left" + " from room: " + userdata.room);
+      console.log("User: " + userdata.name + " has left" + "from room: " + userdata.room);
       // delete user data-
       delete clientInfo[socket.id];
 
-    }
+    } el
   });
 
   // for private chat
@@ -186,15 +120,7 @@ io.sockets.on("connection", function(socket) {
     }
 
   });
-
-	 
 });
-
 http.listen(PORT, function() {
   console.log("server started");
 });
-
-var FileSaveCallback = (err) => {
-  if (err) throw err;
-  console.log('File is saved!');
-}

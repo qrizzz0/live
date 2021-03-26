@@ -1,4 +1,6 @@
  var socket = io.connect('http://130.225.170.76:3000');
+ 
+ var uploader = new SocketIOFileUpload(socket);
  // listen for server connection
  // get query params from url
  var name = getQueryVariable("name") || 'Anonymous';
@@ -27,6 +29,52 @@
      text: "" //name + " stopped typing"
    });
  }
+
+ function uploadFileBetter() {
+  var fileInput = document.getElementById('file');
+  if ('files' in fileInput) {
+    if (fileInput.files.length == 0) {
+      console.log("No file selected!")
+    } else {
+      for (var i = 0; i < fileInput.files.length; i++) {
+        var file = fileInput.files[i];
+
+        //Upload here
+        var fileReader = new FileReader(), slice = file.slice(0, 100000);
+  
+        fileReader.readAsArrayBuffer(slice);
+      
+        fileReader.onload = (evt) => {
+          var arrayBuffer = fileReader.result; 
+          socket.emit('upload slice', { 
+            name: file.name, 
+            type: file.type, 
+            size: file.size, 
+            data: arrayBuffer 
+          }); 
+        }
+
+        // //Upload
+      }
+    }
+  }
+}
+
+ function uploadFile(){
+  console.log(socket);
+
+  var file = document.getElementById('file');
+
+  uploader.submitFiles(file);
+  console.log("File uploaded: " + file.value);
+
+  uploader.addEventListener("progress", function(event){
+    var percent = event.bytesLoaded / event.file.size * 100;
+    console.log("File is", percent.toFixed(2), "percent loaded");
+  });
+
+ }
+
  // if key is pressed typing message is seen else auto after 2 sec typing false message is send
  // TODO : add broadcast event when server receives typing event
  $('#messagebox').keyup(function() {
@@ -64,18 +112,18 @@
  });
 
  //setup for custom events
- /*socket.on("message", function(message) {
+ socket.on("message", function(message) {
    console.log("New Message !");
    console.log(message.text);
    // insert messages in container
-   var $messages = $(".messages");
+   var chatMessages = $(".messages");
    var $message = $('<li class = "list-group-item"></li>');
 
    var momentTimestamp = moment.utc(message.timestamp).local().format("h:mm a");
    //$(".messages").append($('<p>').text(message.text));
    $message.append("<strong>" + momentTimestamp + " " + message.name + "</strong>");
    $message.append("<p>" + message.text + "</p>");
-   $messages.append($message);
+   chatMessages.append($message);
    // handle autoscroll
    // manage autoscroll
    var obj = $("ul.messages.list-group");
@@ -85,7 +133,8 @@
    $("ul.messages.list-group").animate({
      scrollTop: scrollLength - offset.top
    });
- });*/
+ });
+
 
  // handles submitting of new message
  var $form = $("#messageForm");
@@ -123,8 +172,6 @@
    $("ul.messages.list-group").animate({
      scrollTop: scrollLength - offset.top
    });
-
-   
-
  });
+
 
