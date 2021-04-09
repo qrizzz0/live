@@ -1,11 +1,5 @@
 var PORT = process.env.PORT || 3000; // take port from heroku or for loacalhost
-var SocketIOFileUpload = require('socketio-file-upload');
-//var express = require("express");
-//var app = express()
-//    .use(SocketIOFileUpload.router)
-//    .listen(PORT);
-//var app = express(); // express app which is used boilerplate for HTTP
-//var http = require("http").Server(app);
+var WebSocketUploader = require('./uploader.js')
 
 var http = require("http").Server();
 
@@ -14,6 +8,7 @@ var moment = require("moment");
 const fs = require('fs');
 
 var clientInfo = {};
+var currentUploads = {};
 
 //socket io module
 var io = require("socket.io")(http, {
@@ -23,17 +18,6 @@ var io = require("socket.io")(http, {
   }
 });
 
-var files = {}, 
-    struct = { 
-        name: null, 
-        type: null, 
-        size: 0, 
-        data: [], 
-        slice: 0, 
-    };
-
-// expose the folder via express thought
-//app.use(express.static(__dirname + '/public'));
 
 // send current users to provided scoket
 function sendCurrentUsers(socket) { // loading current users
@@ -67,56 +51,25 @@ function sendCurrentUsers(socket) { // loading current users
 io.sockets.on("connection", function(socket) {
   console.log("User is connected");
 
+  socket.on('upload first slice', function(input) {
+    currentUploads[input.id] = new WebSocketUploader(socket, input);
+    console.log("receiving first slice for id: " + input.id + " name: " + input.name);
 
-  var uploader = new SocketIOFileUpload();
-  uploader.dir = "/home/cloud/live/backend/data";
-  uploader.listen(socket);
-  
-  uploader.on("start", function(event){
-    console.log(event);
+    var uploader = currentUploads[input.id];
+    uploader.push(input);
+    
+    var userInfo = clientInfo[socket.id];
+    io.in(userInfo.room).emit("message", {
+      text: '<a href="data/' + input.name + '" target="_blank">' + input.name + '</a>' + " was sent" + " from user: " + userInfo.name,
+      name: "System",
+      timestamp: moment().valueOf()        
+    });
   });
 
-  uploader.on("saved", function(event){
-    console.log(event.file);
-  });
-
-  // Error handler:
-  uploader.on("error", function(event){
-    console.log("Error from uploader", event);
-  });
-
-  socket.on('upload slice', function(input) {
-      var userInfo = clientInfo[socket.id];
-      console.log("Nice nice.")
-      if (!files[input.name]) {
-        files[input.name] = Object.assign({}, struct, input);  //Lav ny files (struct) med navn data.name
-        files[input.name].data = []; 
-      }
-
-      input.data = new Buffer(new Uint8Array(input.data)); //Fix buffer til hvad end man bruger i dag
-
-      files[input.name].data.push(input.data); 
-      files[input.name].slice++;
-
-      if (files[input.name].slice * 100000 >= files[input.name].size) {  //Hvis vi ændrer slice størrelse skal den ændres her
-        //do something with the data 
-        socket.emit('end upload'); 
-
-        fs.writeFile('/home/cloud/live/frontend/data/' + files[input.name].name, files[input.name].data[0], FileSaveCallback);
-        
-        console.log("data er blevet uploadet. Nice nice.")
-      } else { 
-        socket.emit('request slice upload', { 
-            currentSlice: files[input.name].slice 
-        });  
-      }
-
-      io.in(userInfo.room).emit("message", {
-        text: input.name + " was sent" + " from user: " + userInfo.name,
-        name: "System",
-        timestamp: moment().valueOf()        
-      });
-
+  socket.on('upload next slice', function(input) {
+    console.log("Receiving next slice of data for id: " + input.id);
+    var uploader = currentUploads[input.id];
+    uploader.push(input);
   });
 
 
@@ -193,8 +146,3 @@ io.sockets.on("connection", function(socket) {
 http.listen(PORT, function() {
   console.log("server started");
 });
-
-var FileSaveCallback = (err) => {
-  if (err) throw err;
-  console.log('File is saved!');
-}
