@@ -84,7 +84,6 @@
   }
   document.getElementById("file").value = "";
  }
-
  function showPassword() {
   var getPassword = document.getElementById("myPassword");
   if (getPassword.type === "password") {
@@ -92,9 +91,7 @@
   } else {
     getPassword.type = "password";
   }
-}
-
- socket.on('request next slice', function(input) {
+} socket.on('request next slice', function(input) {
     currentUploads[input.id].uploadSpecificSlice(input.currentSlice);
     console.log("next slice: " + input.currentSlice + "requested, id: " + input.id);
  });
@@ -127,7 +124,6 @@
      scrollTop: scrollLength - offset.top
    });
  });
-
 
  // handles submitting of new message
  var $form = $("#messageForm");
