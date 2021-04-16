@@ -1,14 +1,17 @@
  var socket = io.connect('http://130.225.170.76:3000');
- 
- var uploader = new SocketIOFileUpload(socket);
  // listen for server connection
  // get query params from url
  var name = getQueryVariable("name") || 'Anonymous';
  var room = getQueryVariable("room") || 'No Room Selected';
 
+ var currentUploads = {};
+
  $(".room-title").text(room);
  // fires when client successfully conencts to the server
  socket.on("connect", function() {
+   if (name.length > 10){
+     console.log("Name to long\n");
+   }
    console.log("Connected to Socket I/O Server!");
    console.log(name + " wants to join  " + room);
    // to join a specific room
@@ -18,6 +21,7 @@
    });
  });
 
+ ///////////////// Clean this timeout shit up
  // below code is to know when typing is there
  var timeout;
 
@@ -30,51 +34,7 @@
    });
  }
 
- function uploadFileBetter() {
-  var fileInput = document.getElementById('file');
-  if ('files' in fileInput) {
-    if (fileInput.files.length == 0) {
-      console.log("No file selected!")
-    } else {
-      for (var i = 0; i < fileInput.files.length; i++) {
-        var file = fileInput.files[i];
-
-        //Upload here
-        var fileReader = new FileReader(), slice = file.slice(0, 100000);
-  
-        fileReader.readAsArrayBuffer(slice);
-      
-        fileReader.onload = (evt) => {
-          var arrayBuffer = fileReader.result; 
-          socket.emit('upload slice', { 
-            name: file.name, 
-            type: file.type, 
-            size: file.size, 
-            data: arrayBuffer 
-          }); 
-        }
-
-        // //Upload
-      }
-    }
-  }
-}
-
- function uploadFile(){
-  console.log(socket);
-
-  var file = document.getElementById('file');
-
-  uploader.submitFiles(file);
-  console.log("File uploaded: " + file.value);
-
-  uploader.addEventListener("progress", function(event){
-    var percent = event.bytesLoaded / event.file.size * 100;
-    console.log("File is", percent.toFixed(2), "percent loaded");
-  });
-
- }
-
+  ///////////////// Clean this up
  // if key is pressed typing message is seen else auto after 2 sec typing false message is send
  // TODO : add broadcast event when server receives typing event
  $('#messagebox').keyup(function() {
@@ -90,6 +50,8 @@
    timeout = setTimeout(timeoutFunction, 1000);
  });
 
+
+ ///////////////// Clean this up
  // below is the checking for page visibility api
  var hidden, visibilityChange;
  if (typeof document.hidden !== "undefined") { // Opera 12.10 and Firefox 18 and later support
@@ -106,6 +68,37 @@
    visibilityChange = "webkitvisibilitychange";
  }
 
+ function uploadFileBetter() {
+  var fileInput = document.getElementById('file');
+  if ('files' in fileInput) {
+    if (fileInput.files.length == 0) {
+      console.log("No file selected!")
+    } else {
+      for (var i = 0; i < fileInput.files.length; i++) {
+        var file = fileInput.files[i];
+        var uploader = new WebSocketUploaderClient(socket, file, 100000);
+        uploader.uploadFirstSlice();
+        currentUploads[uploader.getId()] = uploader; //Save the WebSocketUploaderClient in the array of uploads
+      }
+    }
+  }
+  document.getElementById("file").value = "";
+ }
+
+ function showPassword() {
+  var getPassword = document.getElementById("myPassword");
+  if (getPassword.type === "password") {
+    getPassword.type = "text";
+  } else {
+    getPassword.type = "password";
+  }
+}
+
+ socket.on('request next slice', function(input) {
+    currentUploads[input.id].uploadSpecificSlice(input.currentSlice);
+    console.log("next slice: " + input.currentSlice + "requested, id: " + input.id);
+ });
+
  //listening for typing  event
  socket.on("typing", function(message) { 
    $(".typing").text(message.text);
@@ -116,14 +109,14 @@
    console.log("New Message !");
    console.log(message.text);
    // insert messages in container
-   var chatMessages = $(".messages");
-   var $message = $('<li class = "list-group-item"></li>');
+   var allMessages = $(".messages");
+   var currentMessage = $('<li class = "list-group-item"></li>');
 
    var momentTimestamp = moment.utc(message.timestamp).local().format("h:mm a");
    //$(".messages").append($('<p>').text(message.text));
-   $message.append("<strong>" + momentTimestamp + " " + message.name + "</strong>");
-   $message.append("<p>" + message.text + "</p>");
-   chatMessages.append($message);
+   currentMessage.append("<strong>" + momentTimestamp + " " + message.name + "</strong>");
+   currentMessage.append("<p>" + message.text + "</p>");
+   allMessages.append(currentMessage);
    // handle autoscroll
    // manage autoscroll
    var obj = $("ul.messages.list-group");
@@ -151,18 +144,18 @@
      name: name
    });
    // show user messageForm
-   var $messages = $(".messages");
-   var $message = $('<li class = "list-group-item"></li>');
+   var allMessages = $(".messages"); //Creates DOM HTML element
+   var currentMessage = $('<li class = "list-group-item"></li>'); //Creates DOM HTML element
 
    var momentTimestamp = moment().format("h:mm a");
    // $(".messages").append($('<p>').text(message.text));
-   $message.append("<strong>" + momentTimestamp + " " + name + "</strong>");
+   currentMessage.append("<strong>" + momentTimestamp + " " + name + "</strong>");
    //$message.append("<p>" + $message1.val()+ "</p>");
-   $message.append($("<p>", {
+   currentMessage.append($("<p>", {
      class: "mymessages",
      text: $message1.val()
    }));
-   $messages.append($message);
+   allMessages.append(currentMessage);
    $message1.val('');
    // manage autoscroll
    var obj = $("ul.messages.list-group");
