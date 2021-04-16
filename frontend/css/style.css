@@ -1,37 +1,71 @@
 .vertical-center {
-  min-height: 100vh;
-  margin: 0;
-  display: flex;
-  align-items: center;
+	min-height: 100vh;
+	margin: 0;
+	display: flex;
+	align-items: center;
 }
 .vertical-center .container-fluid {
-  flex-grow:1
+	flex-grow: 1;
 }
 h1 {
-  margin: 24px 0;
+	margin: 24px 0;
 }
 .messages p {
-  margin: 6px 0;
+	margin: 6px 0;
 }
 .mymessages {
-  text-align: right;
-  color: #2E6D88;
-  font-style: italic;
+	text-align: right;
+	color: #2e6d88;
+	font-style: italic;
 }
 ul.messages.list-group {
-  max-height: 50vh;
-  overflow-y: scroll;
+	max-height: 50vh;
+	overflow-y: scroll;
 }
 .typing {
-  font-style: italic;
+	font-style: italic;
 }
 .msg-delieverd {
-  text-shadow: 1px 1px 1px #ccc;
-  font-size: 1.5em;
-  color: #2F99F5;
+	text-shadow: 1px 1px 1px #ccc;
+	font-size: 1.5em;
+	color: #2f99f5;
 }
 .msg-read {
-  text-shadow: 1px 1px 1px #ccc;
-  font-size: 1.5em;
-  color: #2AC151;
+	text-shadow: 1px 1px 1px #ccc;
+	font-size: 1.5em;
+	color: #2ac151;
+}
+
+.list-group select {
+	cursor: pointer;
+	display: inline-block;
+	position: relative;
+	font: 15px Arial, Sans-Serif;
+	color: black;
+	border: 1px solid #ccc;
+	width: 200px;
+	height: auto;
+	padding: 15px;
+	margin-bottom: 10px;
+	scrollbar-width: none;
+	border: none;
+}
+
+select::-webkit-scrollbar {
+	width: 0;
+	height: 0;
+}
+
+.options {
+	margin-bottom: 5px;
+	border-bottom: 1px solid black;
+}
+
+.options:hover {
+	cursor: pointer;
+	font-weight: bold;
+}
+
+.options:checked {
+	background-color: pink;
 }

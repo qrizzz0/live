@@ -1,0 +1,21 @@
+{
+	"id": "asdffg23tdsfs",
+	"users": [1, 2, 3, 4],
+	"messages": [
+		{
+			"messageID": 0,
+			"userID": 2,
+			"Timestamp": "16/04/2021 10:00",
+			"Text": "Hello there",
+			"Files": null
+		},
+		{
+			"messageID": 1,
+			"userID": 3,
+			"Timestamp": "16/04/2021 10:01",
+			"Text": "How You doing?",
+			"Files": null
+		}
+	],
+	"admins": [1]
+}
