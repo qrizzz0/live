@@ -33,6 +33,16 @@ var io = require("socket.io")(http, {
 	},
 });
 
+// Helper functions
+
+// Validate mail format, by matching with RFC 2822 standard regex.
+// Return boolean.
+// https://stackoverflow.com/questions/46155/how-to-validate-an-email-address-in-javascript
+function validateMail(mail) {
+	var rfc2822regex = /[a-z0-9!#$%&'*+/=?^_`{|}~-]+(?:\.[a-z0-9!#$%&'*+/=?^_`{|}~-]+)*@(?:[a-z0-9](?:[a-z0-9-]*[a-z0-9])?\.)+[a-z0-9](?:[a-z0-9-]*[a-z0-9])?/;
+	return rfc2822regex.test(mail);
+}
+
 // send current users to provided scoket
 function sendCurrentUsers(socket) {
 	// loading current users
@@ -111,7 +121,12 @@ io.sockets.on("connection", function (socket) {
 		}
 	});
 
-	socket.on("login", function (hej) {
+	socket.on("login", function (req) {
+		// get user information; mail and hashed password
+		// Authenticate mail and password;
+		// Emit true if authenticated.
+		// Emit false if not authenticated.
+
 		if (database.brugernavn.exists) {
 			if (hej.passwordhash == database.passwordhash) {
 				clientInfo[socket.id].user = "kristofer";
@@ -124,18 +139,64 @@ io.sockets.on("connection", function (socket) {
 	});
 	socket.on("signup", (req) => {
 		console.log("Signing up user!");
-
+		var res;
+		// Get signup information about the new user.
 		var newuser = req;
 		newuser._id = new mongoose.Types.ObjectId();
-
-		var user = userModel(newuser);
+		// Validate mailstring
+		if (!validateMail(newuser.email)) {
+			res.success = false;
+			res.err = "Not a valid email format";
+			socket.emit("signup", res);
+			return;
+		}
+		// Check if username or mail exists.
+		UserModel.exists({ email: newuser.email }, function (err, doc) {
+			if (err) {
+				res.success = false;
+				res.err = "Error in looking up existing user mail";
+				socket.emit("signup", res);
+				return;
+			} else {
+				if (doc) {
+					//true if at least one case is found.
+					res.success = false;
+					res.err = "Mail already used";
+					socket.emit("signup", res);
+					return;
+				}
+			}
+		});
+		UserModel.exists({ username: newuser.username }, function (err, doc) {
+			if (err) {
+				res.success = false;
+				res.err = "Error in looking up existing username";
+				socket.emit("signup", res);
+				return;
+			} else {
+				if (doc) {
+					//true if at least one case is found.
+					res.success = false;
+					res.err = "Username already used";
+					socket.emit("signup", res);
+					return;
+				}
+			}
+		});
+		// Create newuser with valid information. And return success.
+		// Else return failure message.
+		var user = UserModel(newuser);
 		user
 			.save()
-			.then((res) => {
-				console.log("Res: " + res);
+			.then((r) => {
+				res.success = true;
+				socket.emit("signup", res);
 			})
 			.catch((err) => {
-				console.error("ERR: " + err);
+				res.success = false;
+				res.err = err;
+				socket.emit("signup", res);
+				console.log("ERR: " + err);
 			});
 	});
 
