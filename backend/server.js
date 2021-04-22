@@ -120,13 +120,50 @@ io.sockets.on("connection", function (socket) {
 			delete clientInfo[socket.id];
 		}
 	});
-
+	/* Server side login functionality.
+		Wants mail and hashed_password.
+		Returns err on failure
+		Returns user object on success*/
 	socket.on("login", function (req) {
+		var res;
 		// get user information; mail and hashed password
-		// Authenticate mail and password;
-		// Emit true if authenticated.
-		// Emit false if not authenticated.
+		var user = req;
 
+		// Authenticate mail and password;
+		UserModel.find({ email: user.email }, (err, docs) => {
+			if (err) {
+				// Database error
+				res.success = false;
+				res.err = err;
+				socket.emit("login", res);
+				return;
+			}
+			if (docs.length != 1) {
+				//Doesn't exist or multiple instances of user.
+				res.success = false;
+				res.err =
+					"Email couldn't be identified, either multiple instances or none exist.";
+				socket.emit("login", res);
+				return;
+			}
+			// Select password from user. Match the stored password with the given.
+			docs.select("hashed_password").exec((password) => {
+				if (password.equals(user.password)) {
+					// Emit true if authenticated.
+					res.success = true;
+					res.user = docs;
+					socket.emit("login", res);
+				} else {
+					// Emit false if not authenticated.
+					// Wrong password
+					res.success = false;
+					res.err = "Wrong password!";
+					socket.emit("login", res);
+					return;
+				}
+			});
+		});
+		/*
 		if (database.brugernavn.exists) {
 			if (hej.passwordhash == database.passwordhash) {
 				clientInfo[socket.id].user = "kristofer";
@@ -136,6 +173,8 @@ io.sockets.on("connection", function (socket) {
 				});
 			}
 		}
+
+		*/
 	});
 	socket.on("signup", (req) => {
 		console.log("Signing up user!");
