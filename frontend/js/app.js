@@ -9,9 +9,6 @@
  $(".room-title").text(room);
  // fires when client successfully conencts to the server
  socket.on("connect", function() {
-   if (name.length > 10){
-     console.log("Name to long\n");
-   }
    console.log("Connected to Socket I/O Server!");
    console.log(name + " wants to join  " + room);
    // to join a specific room
@@ -84,6 +81,7 @@
   }
   document.getElementById("file").value = "";
  }
+
  function showPassword() {
   var getPassword = document.getElementById("myPassword");
   if (getPassword.type === "password") {
@@ -91,7 +89,9 @@
   } else {
     getPassword.type = "password";
   }
-} socket.on('request next slice', function(input) {
+}
+
+ socket.on('request next slice', function(input) {
     currentUploads[input.id].uploadSpecificSlice(input.currentSlice);
     console.log("next slice: " + input.currentSlice + "requested, id: " + input.id);
  });
@@ -124,6 +124,7 @@
      scrollTop: scrollLength - offset.top
    });
  });
+
 
  // handles submitting of new message
  var $form = $("#messageForm");

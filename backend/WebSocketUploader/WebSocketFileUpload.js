@@ -2,7 +2,7 @@ const { throws } = require('assert');
 const fs = require('fs');
 const CryptoJS = require('crypto-js');
 
-class WebSocketUploader {
+class WebSocketFileUpload {
     data = [];
 
     constructor(socket, fileInput) {
@@ -67,7 +67,7 @@ class WebSocketUploader {
 }
 
 
-module.exports = WebSocketUploader
+module.exports = WebSocketFileUpload
 
 
 
