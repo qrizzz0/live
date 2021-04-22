@@ -1,5 +1,6 @@
 var PORT = process.env.PORT || 3000; // take port from heroku or for loacalhost
-var WebSocketUploader = require("./uploader.js");
+var WebSocketUploader = require("./WebSocketUploader/WebSocketUploader.js");
+
 var mongoose = require("mongoose");
 
 mongoose.connect("mongodb://localhost/chattest", {
@@ -72,36 +73,6 @@ function sendCurrentUsers(socket) {
 // io.on listens for events
 io.sockets.on("connection", function (socket) {
 	new WebSocketUploader(socket);
-	socket.on("upload first slice", function (input) {
-		currentUploads[input.id] = new WebSocketUploader(socket, input);
-		console.log(
-			"receiving first slice for id: " + input.id + " name: " + input.name
-		);
-
-		var uploader = currentUploads[input.id];
-		uploader.push(input);
-
-		var userInfo = clientInfo[socket.id];
-		io.in(userInfo.room).emit("message", {
-			text:
-				'<a href="data/' +
-				input.name +
-				'" target="_blank">' +
-				input.name +
-				"</a>" +
-				" was sent" +
-				" from user: " +
-				userInfo.name,
-			name: "System",
-			timestamp: moment().valueOf(),
-		});
-	});
-
-	socket.on("upload next slice", function (input) {
-		console.log("Receiving next slice of data for id: " + input.id);
-		var uploader = currentUploads[input.id];
-		uploader.push(input);
-	});
 
 	//for disconnection
 	socket.on("disconnect", function () {
