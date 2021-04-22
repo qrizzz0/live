@@ -246,6 +246,57 @@ io.sockets.on("connection", function (socket) {
 		});
 	});
 
+	// Websocket for getting user info.
+	// UserID is sent.
+	// User is found.
+	// Send back userinfo.
+
+	// Websocket for creating new Rooms
+	// UserId creating room is sent
+	// New room is created in database.
+	// UserÌD is added to room.
+	// UserID is added as admin.
+
+	// Websocket for changing admin.
+	// Criteria the new admin must be part of the room.
+	// UserInfo for the new admin is sent.
+	// User is found.
+	// Room is found and update the admin to the new user.
+
+	// Websocket for deleting existing rooms.
+	// Only room admin is allowed to remove chatrooms.
+	// UserInfo is sent.
+	// User is found.
+	// Compare user to registered admin.
+	// if same, then remove room from each user in the room.
+	// and then delete delete room.
+	// else error.
+
+	// Websocket for joining rooms.
+	// UserInfo is sent.
+	// Find the linked room.
+	// Add user to its list.
+	// Send back list of messages.
+
+	// Websocket for leaving rooms.
+	// UserInfo is sent.
+	// Find the wished room.
+	// remove user from room.
+
+	// Websocket for handling messages.
+	// UserInfo, RoomInfo and message is sent.
+	// Create new message.
+	// Add message to room.
+	// Broadcast message to members.
+
+	// Delete message.
+	// Message info is sent.
+	// If there is a file.
+	// Find file.
+	// Delete physical file.
+	// Remove file from database.
+	// Remove message from database.
+
 	// for private chat
 	socket.on("joinRoom", function (req) {
 		clientInfo[socket.id] = req;
