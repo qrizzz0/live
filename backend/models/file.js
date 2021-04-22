@@ -1,7 +1,8 @@
 const mongoose = require("mongoose");
 
 const fileSchema = new mongoose.Schema({
-	_id: Number,
+	_id: mongoose.Types.ObjectId,
+	fileid: Number,
 	name: String,
 	path: String,
 	fileSize: Number,
