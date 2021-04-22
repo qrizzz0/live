@@ -286,6 +286,7 @@ io.sockets.on("connection", function (socket) {
 	// Websocket for handling messages.
 	// UserInfo, RoomInfo and message is sent.
 	// Create new message.
+	// If file do file transfer.
 	// Add message to room.
 	// Broadcast message to members.
 
