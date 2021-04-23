@@ -1,6 +1,6 @@
 import { message } from "./helperFunctions/message.js";
 
-var PORT = process.env.PORT || 3000; // take port from heroku or for loacalhost
+var PORT = process.env.PORT || 3015; // take port from heroku or for loacalhost
 var WebSocketUploader = require("./WebSocketUploader/WebSocketUploader.js");
 
 var mongoose = require("mongoose");
@@ -262,7 +262,6 @@ io.sockets.on("connection", function (socket) {
 	// Websocket for creating new Rooms
 	socket.on("newroom", (req) => {
 		// UserId creating room is sent
-		
 		// New room is created in database.
 		// UserÌD is added to room.
 		// UserID is added as admin.
