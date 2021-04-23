@@ -1,0 +1,59 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <meta content="IE=edge" http-equiv="X-UA-Compatible">
+    <meta content="width=device-width, initial-scale=1" name="viewport">
+    <title>Chat</title>
+    <link href="/images/logo.png" rel="icon" type="image/png"/>
+    <link href="logo.ico" rel="shortcut icon"/>
+    <link href="/images/apple-icon.png" rel="apple-touch-icon-precomposed">
+    <link href="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.5/css/bootstrap.min.css" rel="stylesheet">
+    <link href="https://maxcdn.bootstrapcdn.com/font-awesome/4.5.0/css/font-awesome.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.4.0/font/bootstrap-icons.css">
+    <link href="/css/style.css" rel="stylesheet">
+
+    <!--[if lt IE 9]> <script src="https://cdn.jsdelivr.net/html5shiv/3.7.2/html5shiv.min.js"></script> <script src="https://cdn.jsdelivr.net/respond/1.4.2/respond.min.js"></script> <![endif]-->
+  </head>
+  <body>
+    <div class="vertical-center">
+      <div class="container-fluid">
+        <div class="row">
+          <div class="col-md-4 col-md-offset-4 well">
+            <h1 class="text-center">
+              Chat Application !</h1>
+            <form action="/chat.html" class="">
+              <a class="btn btn-primary" href="/index.html">
+                <i class="bi bi-box-arrow-left"></i>
+                Go Back
+              </a>
+              <div class="form-group">
+                <label for="room">Choose Room:</label>
+                <div class="list-group">
+                  <select class="col-md-2" name="room" size="8">
+                    <option class="options bi bi-door-open-fill" value="Room 1"> Room 1 </option>  
+                    <option class="options bi bi-door-open-fill" value="Room 2"> Room 2 </option>  
+                    <option class="options bi bi-door-open-fill" value="Room 3"> Room 3 </option>  
+                    <option class="options bi bi-door-open-fill" value="Room 4"> Room 4 </option>
+                    <option class="options bi bi-door-open-fill" value="Room 5"> Room 5 </option>
+                    <option class="options bi bi-door-open-fill" value="Room 6"> Room 6 </option>
+                    <option class="options bi bi-door-open-fill" value="Room 7"> Room 7 </option>
+                    <option class="options bi bi-door-open-fill" value="Room 8"> Room 8 </option>
+                </select>  
+                </div>
+              </div>
+
+              <div class="form-group">
+                <input class="btn btn-primary btn-block" type="submit" value="Join Room"/>
+              </div>
+
+            </form>
+
+          </div>
+        </div>
+      </div>
+    </div>
+  </body>
+</html>
+<script src="/js/app.js"></script>
+
