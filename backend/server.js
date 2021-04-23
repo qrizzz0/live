@@ -262,7 +262,6 @@ io.sockets.on("connection", function (socket) {
 	// Websocket for creating new Rooms
 	socket.on("newroom", (req) => {
 		// UserId creating room is sent
-		
 		// New room is created in database.
 		// UserÌD is added to room.
 		// UserID is added as admin.
@@ -336,7 +335,7 @@ io.sockets.on("connection", function (socket) {
 		//socket.emit("message", msg);
 	});
 
-	helpmessage.message("message", "Welcome to Chat Application !");
+	helpmessage.message(socket, "Welcome to Chat Application !");
 	/*socket.emit("message", {
 		text: "Welcome to Chat Application !",
 		timestamp: moment().valueOf(),

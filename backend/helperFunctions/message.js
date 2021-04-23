@@ -1,5 +1,5 @@
 function message(socket, textString) {
-	socket.emit(socket, {
+	socket.emit("message", {
 		text: textString,
 		timestamp: moment().valueOf(),
 		name: "System",
