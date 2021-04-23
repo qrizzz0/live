@@ -83,6 +83,15 @@ function uploadFileBetter() {
 	document.getElementById("file").value = "";
 }
 
+function showPassword() {
+	var getPassword = document.getElementById("myPassword");
+	if (getPassword.type === "password") {
+		getPassword.type = "text";
+	} else {
+		getPassword.type = "password";
+	}
+}
+
 socket.on("request next slice", function (input) {
 	currentUploads[input.id].uploadSpecificSlice(input.currentSlice);
 	console.log(
