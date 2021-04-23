@@ -260,11 +260,13 @@ io.sockets.on("connection", function (socket) {
 	});
 
 	// Websocket for creating new Rooms
-	socket.on("newroom", (req) => {});
-	// UserId creating room is sent
-	// New room is created in database.
-	// UserÌD is added to room.
-	// UserID is added as admin.
+	socket.on("newroom", (req) => {
+		// UserId creating room is sent
+		
+		// New room is created in database.
+		// UserÌD is added to room.
+		// UserID is added as admin.
+	});
 
 	// Websocket for changing admin.
 	// Criteria the new admin must be part of the room.
