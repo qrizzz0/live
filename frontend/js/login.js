@@ -8,11 +8,11 @@ function getCookieID() {
 }
 
 function checkCookieID() {
-    if (!getCookieID().empty){
-        console.log(localStorage.getItem());
-        window.location.replace("http://130.225.170.76/room.html");
+    if (getCookieID() === null){
+        console.log("User has no CookieID");
     } else {
-        setCookieID(document.getElementById("name"));
+        console.log("CookieID112312123: ", localStorage.getItem("cookieID"));
+        window.location.replace("http://130.225.170.76/room.html");
     }
 }
 
@@ -23,17 +23,14 @@ function checkEmail() {
 }
 
 function checkFormInput(){
-    var checkEmail = document.getElementById("email");
-    var checkUser = document.getElementById("name");
+    var checkName = document.getElementById("name");
     var checkPassword = document.getElementById("myPassword");
-    if (!checkEmail.checkValidity || !checkUser.checkValidity || !checkPassword.checkValidity) {
-        document.getElementById("valid1") = checkEmail.validationMessage;
-        document.getElementById("valid2") = checkUser.validationMessage;
-        document.getElementById("valid3") = checkPassword.validationMessage;
+    if (!checkName.checkValidity || !checkPassword.checkValidity) {
+        document.getElementById("valid1") = checkName.validationMessage;
+        document.getElementById("valid2") = checkPassword.validationMessage;
     } else {
         document.getElementById("valid1").innerHTML = "Input OK";
         document.getElementById("valid2").innerHTML = "Input OK";
-        document.getElementById("valid3").innerHTML = "Input OK";
     }
 }
 
@@ -46,13 +43,13 @@ function showPassword() {
 	}
 }
 
+checkCookieID();
+console.log("CookieID: ", getCookieID());
 function main () {
-    checkCookieID();
-    console.log(getCookieID());
     checkFormInput();
+    
+    setCookieID(document.getElementById("name").value);
     if (!checkEmail()){
-        alert("Not a valid email");
         console.log("Not a valid email");
     }
-    //window.location.replace("http://130.225.170.76/room.html"
 }

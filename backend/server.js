@@ -34,7 +34,7 @@ var currentUploads = {};
 var io = require("socket.io")(http, {
 	cors: {
 		origin: "http://130.225.170.76",
-		methods: ["GET", "POST"],
+        methods: ["GET", "POST"],
 	},
 });
 
@@ -260,12 +260,11 @@ io.sockets.on("connection", function (socket) {
 	});
 
 	// Websocket for creating new Rooms
-	socket.on("newroom", (req) => {
 		// UserId creating room is sent
 		// New room is created in database.
 		// UserÌD is added to room.
 		// UserID is added as admin.
-	});
+
 
 	// Websocket for changing admin.
 	// Criteria the new admin must be part of the room.
@@ -282,6 +281,7 @@ io.sockets.on("connection", function (socket) {
 	// and then delete delete room.
 	// else error.
 
+
 	// Websocket for joining rooms.
 	// UserInfo is sent.
 	// Find the linked room.
@@ -292,7 +292,7 @@ io.sockets.on("connection", function (socket) {
 	// UserInfo is sent.
 	// Find the wished room.
 	// remove user from room.
-
+	
 	// Websocket for handling messages.
 	// UserInfo, RoomInfo and message is sent.
 	// Create new message.
@@ -307,7 +307,7 @@ io.sockets.on("connection", function (socket) {
 	// Delete physical file.
 	// Remove file from database.
 	// Remove message from database.
-	socket.on("deletemessage", (req) =>{
+	socket.on("deletemessage", async (req) =>{
 		var messageID = req.messageID;
 		var roomID = req.roomID;
 		var userID = req.userID;
@@ -330,27 +330,27 @@ io.sockets.on("connection", function (socket) {
 			}
 		});
 
-		if (req.userID == room.admin || req.userID == message.sender)
-		{
-			if (message.file.exists()){
-				// Slet fil
-
-				console.log("File:" + message.file +  " deleted");
-			}
-			
-			// Slet besked
-			MessageModel.findByIdAndDelete({id_: message._id}, (err) => {
-				if (err){
-					res.success = false;
-					res.err = "Can't delete message";
-					socket.emit("deletemessage", res);
-					return;
+		if (room.err == null && message.err == null){
+			if (req.userID == room.admin || req.userID == message.sender){
+				if (message.file.exists()){
+					// Slet fil
+					console.log("File:" + message.file +  " deleted");
 				}
-			});
-			console.log("Message" + message.text + " deleted");
-			res.success = true;
-			res.err = "Message deleted";
-			socket.emit("deletemessage", res);	
+				
+				// Slet besked
+				MessageModel.findByIdAndDelete({id_: message._id}, (err) => {
+					if (err){
+						res.success = false;
+						res.err = "Can't delete message";
+						socket.emit("deletemessage", res);
+						return;
+					}
+				});
+				console.log("Message" + message.text + " deleted");
+				res.success = true;
+				res.err = "Message deleted";
+				socket.emit("deletemessage", res);	
+			}
 		}
 	});
 
