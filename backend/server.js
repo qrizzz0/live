@@ -19,6 +19,8 @@ var MessageModel = require("./models/message");
 
 var http = require("http").Server();
 
+const basicUserInfo = ["username", "email"];
+
 //moment js for timestamps
 var moment = require("moment");
 const fs = require("fs");
@@ -97,7 +99,7 @@ io.sockets.on("connection", function (socket) {
 		Returns err on failure
 		Returns user object on success*/
 	socket.on("login", function (req) {
-		var res;
+		var res = {};
 		// get user information; mail and hashed password
 		var user = req;
 
@@ -150,7 +152,7 @@ io.sockets.on("connection", function (socket) {
 	});
 	socket.on("signup", (req) => {
 		console.log("Signing up user!");
-		var res;
+		var res = {};
 		// Get signup information about the new user.
 		var newuser = req;
 		newuser._id = new mongoose.Types.ObjectId();
@@ -218,10 +220,29 @@ io.sockets.on("connection", function (socket) {
 		});
 	});
 
+	// Websocket for adding friends.
+
+	// Websocket for removing friends.
+
 	// Websocket for getting user info.
+	socket.on("getuserinfo", (req) => {
+		var res = {};
+		UserModel.findOne({ _id: req.uid }, (err, doc) => {
+			if (err) {
+				res.success = false;
+				res.err = err;
+				socket.emit("getuserinfo", res);
+				console.log("ERR: " + err);
+				return;
+			}
+			doc.select(basicUserInfo, (err, doc) => {});
+		});
+	});
+
 	// UserID is sent.
 	// User is found.
 	// Send back userinfo.
+	//
 
 	// Websocket for creating new Rooms
 	// UserId creating room is sent

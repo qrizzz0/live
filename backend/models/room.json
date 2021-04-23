@@ -1,6 +1,11 @@
 {
 	"id": "asdffg23tdsfs",
-	"users": [1, 2, 3, 4],
+	"users": [
+		1,
+		2,
+		3,
+		4
+	],
 	"messages": [
 		{
 			"messageID": 0,
@@ -13,9 +18,11 @@
 			"messageID": 1,
 			"userID": 3,
 			"Timestamp": "16/04/2021 10:01",
-			"Text": "How You doing?",
+			"Text": "General Kenobi?",
 			"Files": null
 		}
 	],
-	"admins": [1]
+	"admins": [
+		1
+	]
 }

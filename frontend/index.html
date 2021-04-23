@@ -24,49 +24,44 @@
               Chat Application !</h1>
             <form action="/chat.html" class="">
 
-              <div class="form-group">
-                <label for="name">
-                  User Name:</label>
-                <div class="input-group">
-                  <span class="input-group-addon">
-                    <i class="glyphicon glyphicon-user"></i>
-                  </span>
-                  <input class="form-control" id="name" name="name" placeholder="" type="text">
+                <div class="form-group">
+                    <label for="name">
+                      Email:</label>
+                    <div class="input-group">
+                      <span class="input-group-addon">
+                        <i class="glyphicon glyphicon-user"></i>
+                      </span>
+                      <input class="form-control" id="email" name="email" placeholder="" type="text">
+                    </div>
                 </div>
 
-              </div>
-
-              <div class="form-group">
-                <label for="name">
-                  Password:</label>
-                <div class="input-group">
-                  <span class="input-group-addon">
-                    <i class="bi bi-lock-fill"></i>
-                  </span>
-                  <input class="form-control" id="myPassword" placeholder="" type="password">
+                <div class="form-group">
+                    <label for="name">
+                    User Name:</label>
+                    <div class="input-group">
+                    <span class="input-group-addon">
+                        <i class="glyphicon glyphicon-user"></i>
+                    </span>
+                    <input class="form-control" id="name" name="name" placeholder="" type="text">
+                    </div>
                 </div>
-                <input type="checkbox" onclick="showPassword()"> Show Password 
-              </div>  
 
-              <div class="form-group">
-                <label for="room">Choose Room:</label>
-                <div class="list-group">
-                  <select class="col-md-2" name="room" size="8">
-                    <option class="options bi bi-door-open-fill" value="Room 1"> Room 1 </option>  
-                    <option class="options bi bi-door-open-fill" value="Room 2"> Room 2 </option>  
-                    <option class="options bi bi-door-open-fill" value="Room 3"> Room 3 </option>  
-                    <option class="options bi bi-door-open-fill" value="Room 4"> Room 4 </option>
-                    <option class="options bi bi-door-open-fill" value="Room 5"> Room 5 </option>
-                    <option class="options bi bi-door-open-fill" value="Room 6"> Room 6 </option>
-                    <option class="options bi bi-door-open-fill" value="Room 7"> Room 7 </option>
-                    <option class="options bi bi-door-open-fill" value="Room 8"> Room 8 </option>
-                </select>  
-                </div>
-              </div>
+                <div class="form-group">
+                    <label for="name">
+                    Password:</label>
+                    <div class="input-group">
+                    <span class="input-group-addon">
+                        <i class="bi bi-lock-fill"></i>
+                    </span>
+                    <input class="form-control" id="myPassword" placeholder="" type="password">
+                    </div>
+                    <input type="checkbox" onclick="showPassword()"> Show Password 
+                </div>  
 
-              <div class="form-group">
-                <input class="btn btn-primary btn-block" type="submit" value="Join Chat"/>
-              </div>
+                <a class="btn btn-primary" href="/room.html">
+                    <i class="bi btn-primary"></i>
+                    Join Chat
+                </a>
 
             </form>
 
