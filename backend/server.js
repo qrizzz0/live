@@ -4,8 +4,8 @@ var WebSocketUploader = require("./WebSocketUploader/WebSocketUploader.js");
 var mongoose = require("mongoose");
 
 mongoose.connect("mongodb://localhost/chattest", {
-	useNewUrlParser: true,
-	useUnifiedTopology: true,
+  useNewUrlParser: true,
+  useUnifiedTopology: true,
 });
 const db = mongoose.connection;
 db.on("error", console.error.bind(console, "connection error:"));
@@ -32,10 +32,10 @@ var currentUploads = {};
 
 //socket io module
 var io = require("socket.io")(http, {
-	cors: {
-		origin: "http://130.225.170.76",
-		methods: ["GET", "POST"],
-	},
+  cors: {
+    origin: "http://172.23.96.245:3000",
+    methods: ["GET", "POST"],
+  },
 });
 
 // Helper functions
@@ -44,102 +44,100 @@ var io = require("socket.io")(http, {
 // Return boolean.
 // https://stackoverflow.com/questions/46155/how-to-validate-an-email-address-in-javascript
 function validateMail(mail) {
-	var rfc2822regex = /[a-z0-9!#$%&'*+/=?^_`{|}~-]+(?:\.[a-z0-9!#$%&'*+/=?^_`{|}~-]+)*@(?:[a-z0-9](?:[a-z0-9-]*[a-z0-9])?\.)+[a-z0-9](?:[a-z0-9-]*[a-z0-9])?/;
-	return rfc2822regex.test(mail);
+  var rfc2822regex = /[a-z0-9!#$%&'*+/=?^_`{|}~-]+(?:\.[a-z0-9!#$%&'*+/=?^_`{|}~-]+)*@(?:[a-z0-9](?:[a-z0-9-]*[a-z0-9])?\.)+[a-z0-9](?:[a-z0-9-]*[a-z0-9])?/;
+  return rfc2822regex.test(mail);
 }
 
 // send current users to provided scoket
 function sendCurrentUsers(socket) {
-	// loading current users
-	var info = clientInfo[socket.id];
-	var users = [];
-	if (typeof info === "undefined") {
-		return;
-	}
-	// filte name based on rooms
-	Object.keys(clientInfo).forEach(function (socketId) {
-		var userinfo = clientInfo[socketId];
-		// check if user room and selcted room same or not
-		// as user should see names in only his chat room
-		if (info.room == userinfo.room) {
-			users.push(userinfo.name);
-		}
-	});
-	// emit message when all users list
+  // loading current users
+  var info = clientInfo[socket.id];
+  var users = [];
+  if (typeof info === "undefined") {
+    return;
+  }
+  // filte name based on rooms
+  Object.keys(clientInfo).forEach(function (socketId) {
+    var userinfo = clientInfo[socketId];
+    // check if user room and selcted room same or not
+    // as user should see names in only his chat room
+    if (info.room == userinfo.room) {
+      users.push(userinfo.name);
+    }
+  });
+  // emit message when all users list
 
-	socket.emit("message", {
-		name: "System",
-		text: "Current Users : " + users.join(", "),
-		timestamp: moment().valueOf(),
-	});
+  socket.emit("message", {
+    name: "System",
+    text: "Current Users : " + users.join(", "),
+    timestamp: moment().valueOf(),
+  });
 }
 
 // io.on listens for events
 io.sockets.on("connection", function (socket) {
-	new WebSocketUploader(socket);
+  new WebSocketUploader(socket);
 
-	//for disconnection
-	socket.on("disconnect", function () {
-		var userdata = clientInfo[socket.id];
-		if (typeof (userdata !== undefined)) {
-			socket.leave(userdata.room); // leave the room
-			//broadcast leave room to only memebers of same room
-			socket.broadcast.to(userdata.room).emit("message", {
-				text: userdata.name + " has left",
-				name: "System",
-				timestamp: moment().valueOf(),
-			});
-			console.log(
-				"User: " + userdata.name + " has left" + " from room: " + userdata.room
-			);
-			// delete user data-
-			delete clientInfo[socket.id];
-		}
-	});
-	/* Server side login functionality.
+  //for disconnection
+  socket.on("disconnect", function () {
+    var userdata = clientInfo[socket.id];
+    if (typeof (userdata !== undefined)) {
+      socket.leave(userdata.room); // leave the room
+      //broadcast leave room to only memebers of same room
+      socket.broadcast.to(userdata.room).emit("message", {
+        text: userdata.name + " has left",
+        name: "System",
+        timestamp: moment().valueOf(),
+      });
+      console.log(
+        "User: " + userdata.name + " has left" + " from room: " + userdata.room
+      );
+      // delete user data-
+      delete clientInfo[socket.id];
+    }
+  });
+  /* Server side login functionality.
 		Wants mail and hashed_password.
 		Returns err on failure
 		Returns user object on success*/
-	socket.on("login", function (req) {
-		var res = {};
-		// get user information; mail and hashed password
-		var user = req;
+  socket.on("login", async function (req) {
+    var res = {};
+    // get user information; mail and hashed password
+    var user = req;
 
-		// Authenticate mail and password;
-		UserModel.find({ email: user.email }, (err, docs) => {
-			if (err) {
-				// Database error
-				res.success = false;
-				res.err = err;
-				socket.emit("login", res);
-				return;
-			}
-			if (docs.length != 1) {
-				//Doesn't exist or multiple instances of user.
-				res.success = false;
-				res.err =
-					"Email couldn't be identified, either multiple instances or none exist.";
-				socket.emit("login", res);
-				return;
-			}
-			// Select password from user. Match the stored password with the given.
-			docs.select("hashed_password").exec((password) => {
-				if (password.equals(user.password)) {
-					// Emit true if authenticated.
-					res.success = true;
-					res.user = docs;
-					socket.emit("login", res);
-				} else {
-					// Emit false if not authenticated.
-					// Wrong password
-					res.success = false;
-					res.err = "Wrong password!";
-					socket.emit("login", res);
-					return;
-				}
-			});
-		});
-		/*
+    // Authenticate mail and password;
+    var doc = await UserModel.find({ email: user.email }).exec();
+    if (doc.error()) {
+      res.success = false;
+      res.err = "Error happened during lookup for email";
+      socket.emit("login", res);
+      return;
+    }
+    if (doc.length != 1) {
+      //Doesn't exist or multiple instances of user.
+      res.success = false;
+      res.err =
+        "Email couldn't be identified, either multiple instances or none exist.";
+      socket.emit("login", res);
+      return;
+    }
+    // Select password from user. Match the stored password with the given.
+    docs.select("hashed_password").exec((password) => {
+      if (password.equals(user.password)) {
+        // Emit true if authenticated.
+        res.success = true;
+        res.user = docs;
+        socket.emit("login", res);
+      } else {
+        // Emit false if not authenticated.
+        // Wrong password
+        res.success = false;
+        res.err = "Wrong password!";
+        socket.emit("login", res);
+        return;
+      }
+    });
+    /*
 		if (database.brugernavn.exists) {
 			if (hej.passwordhash == database.passwordhash) {
 				clientInfo[socket.id].user = "kristofer";
@@ -151,268 +149,255 @@ io.sockets.on("connection", function (socket) {
 		}
 
 		*/
-	});
-	socket.on("signup", (req) => {
-		console.log("Signing up user!");
-		var res = {};
-		// Get signup information about the new user.
-		var newuser = req;
-		newuser._id = new mongoose.Types.ObjectId();
-		// Validate mailstring
-		if (!validateMail(newuser.email)) {
-			res.success = false;
-			res.err = "Not a valid email format";
-			socket.emit("signup", res);
-			return;
-		}
-		// Check if username or mail exists.
-		UserModel.exists({ email: newuser.email }, function (err, doc) {
-			if (err) {
-				res.success = false;
-				res.err = "Error in looking up existing user mail";
-				socket.emit("signup", res);
-				return;
-			} else {
-				if (doc) {
-					//true if at least one case is found.
-					res.success = false;
-					res.err = "Mail already used";
-					socket.emit("signup", res);
-					return;
-				}
-			}
-		});
-		UserModel.exists({ username: newuser.username }, function (err, doc) {
-			if (err) {
-				res.success = false;
-				res.err = "Error in looking up existing username";
-				socket.emit("signup", res);
-				return;
-			} else {
-				if (doc) {
-					//true if at least one case is found.
-					res.success = false;
-					res.err = "Username already used";
-					socket.emit("signup", res);
-					return;
-				}
-			}
-		});
-		// Create newuser with valid information. And return success.
-		// Else return failure message.
-		var user = UserModel(newuser);
-		user
-			.save()
-			.then((r) => {
-				res.success = true;
-				socket.emit("signup", res);
-			})
-			.catch((err) => {
-				res.success = false;
-				res.err = err;
-				socket.emit("signup", res);
-				console.log("ERR: " + err);
-			});
-	});
+  });
 
-	socket.on("get rooms", function (hej) {
-		socket.emit("list of rooms", {
-			roomCount: 0,
-			etc: "et eller andet who knows",
-		});
-	});
+  socket.on("signup", async (req) => {
+    console.log("Signing up user!");
+    var res = {};
+    console.log(req);
 
-	// Websocket for adding friends.
+    // Get signup information about the new user.
+    var newuser = req;
+    newuser._id = new mongoose.Types.ObjectId();
+    // Validate mailstring
+    if (!validateMail(newuser.email)) {
+      res.success = false;
+      res.err = "Not a valid email format";
+      socket.emit("signup", res);
+      return;
+    }
+    // Check if username or mail exists.
+    var doc = await UserModel.exists({ email: newuser.email });
+    if (doc) {
+      //true if at least one case is found.
+      res.success = false;
+      res.err = "Mail already used";
+      socket.emit("signup", res);
+      return;
+    }
 
-	// Websocket for removing friends.
+    var doc = await UserModel.exists({ username: newuser.username });
+    if (doc) {
+      //true if at least one case is found.
+      res.success = false;
+      res.err = "Username already used";
+      socket.emit("signup", res);
+      return;
+    }
+    // Create newuser with valid information. And return success.
+    // Else return failure message.
+    var user = UserModel(newuser);
+    user
+      .save()
+      .then((r) => {
+        res.success = true;
+        socket.emit("signup", res);
+      })
+      .catch((err) => {
+        res.success = false;
+        res.err = err;
+        socket.emit("signup", res);
+        console.log("ERR: " + err);
+      });
+  });
 
-	// Websocket for getting user info.
-	socket.on("getuserinfo", (req) => {
-		// UserID is sent.
-		var res = {};
+  socket.on("get rooms", function (hej) {
+    socket.emit("list of rooms", {
+      roomCount: 0,
+      etc: "et eller andet who knows",
+    });
+  });
 
-		// User is found.
-		UserModel.findOne({ _id: req.uid }, (err, doc) => {
-			if (err) {
-				res.success = false;
-				res.err = err;
-				socket.emit("getuserinfo", res);
-				console.log("ERR: " + err);
-				return;
-			}
+  // Websocket for adding friends.
 
-			// Keep only basic infomation.
-			doc.select(basicUserInfo, (err, doc) => {
-				if (err) {
-					res.success = false;
-					res.err = err;
-					socket.emit("getuserinfo", res);
-					console.log("ERR: " + err);
-					return;
-				}
+  // Websocket for removing friends.
 
-				// Send back userinfo.
-				res.success = true;
-				res.user = doc;
-				socket.emit("getuserinfo", res);
-			});
-		});
-	});
+  // Websocket for getting user info.
+  socket.on("getuserinfo", (req) => {
+    // UserID is sent.
+    var res = {};
 
-	// Websocket for creating new Rooms
-	socket.on("newroom", (req) => {
-		// UserId creating room is sent
-		// New room is created in database.
-		// UserÌD is added to room.
-		// UserID is added as admin.
-	});
+    // User is found.
+    UserModel.findOne({ _id: req.uid }, (err, doc) => {
+      if (err) {
+        res.success = false;
+        res.err = err;
+        socket.emit("getuserinfo", res);
+        console.log("ERR: " + err);
+        return;
+      }
 
-	// Websocket for changing admin.
-	// Criteria the new admin must be part of the room.
-	// UserInfo for the new admin is sent.
-	// User is found.
-	// Room is found and update the admin to the new user.
+      // Keep only basic infomation.
+      doc.select(basicUserInfo, (err, doc) => {
+        if (err) {
+          res.success = false;
+          res.err = err;
+          socket.emit("getuserinfo", res);
+          console.log("ERR: " + err);
+          return;
+        }
 
-	// Websocket for deleting existing rooms.
-	// Only room admin is allowed to remove chatrooms.
-	// UserInfo is sent.
-	// User is found.
-	// Compare user to registered admin.
-	// if same, then remove room from each user in the room.
-	// and then delete delete room.
-	// else error.
+        // Send back userinfo.
+        res.success = true;
+        res.user = doc;
+        socket.emit("getuserinfo", res);
+      });
+    });
+  });
 
-	// Websocket for joining rooms.
-	// UserInfo is sent.
-	// Find the linked room.
-	// Add user to its list.
-	// Send back list of messages.
+  // Websocket for creating new Rooms
+  socket.on("newroom", (req) => {
+    // UserId creating room is sent
+    // New room is created in database.
+    // UserÌD is added to room.
+    // UserID is added as admin.
+  });
 
-	// Websocket for leaving rooms.
-	// UserInfo is sent.
-	// Find the wished room.
-	// remove user from room.
+  // Websocket for changing admin.
+  // Criteria the new admin must be part of the room.
+  // UserInfo for the new admin is sent.
+  // User is found.
+  // Room is found and update the admin to the new user.
 
-	// Websocket for handling messages.
-	// UserInfo, RoomInfo and message is sent.
-	// Create new message.
-	// If file do file transfer.
-	// Add message to room.
-	// Broadcast message to members.
+  // Websocket for deleting existing rooms.
+  // Only room admin is allowed to remove chatrooms.
+  // UserInfo is sent.
+  // User is found.
+  // Compare user to registered admin.
+  // if same, then remove room from each user in the room.
+  // and then delete delete room.
+  // else error.
 
-	// Delete message.
-	// Message info is sent.
-	// If there is a file.
-	// Find file.
-	// Delete physical file.
-	// Remove file from database.
-	// Remove message from database.
-	socket.on("deletemessage", (req) =>{
-		var messageID = req.messageID;
-		var roomID = req.roomID;
-		var userID = req.userID;
+  // Websocket for joining rooms.
+  // UserInfo is sent.
+  // Find the linked room.
+  // Add user to its list.
+  // Send back list of messages.
 
-		var room = await RoomModel.find({_id: req.roomID}, (err) => {
-			if (err){
-				res.success = false;
-				res.err = "Can't find room ID";
-				socket.emit("deletemessage", res);
-				return;			
-			}
-		});
+  // Websocket for leaving rooms.
+  // UserInfo is sent.
+  // Find the wished room.
+  // remove user from room.
 
-		var message = await room.find({messages: req.messageID}, (err) => {
-			if (err){
-				res.success = false;
-				res.err = "Can't find message ID";
-				socket.emit("deletemessage", res);
-				return;			
-			}
-		});
+  // Websocket for handling messages.
+  // UserInfo, RoomInfo and message is sent.
+  // Create new message.
+  // If file do file transfer.
+  // Add message to room.
+  // Broadcast message to members.
 
-		if (req.userID == room.admin || req.userID == message.sender)
-		{
-			if (message.file.exists()){
-				// Slet fil
+  // Delete message.
+  // Message info is sent.
+  // If there is a file.
+  // Find file.
+  // Delete physical file.
+  // Remove file from database.
+  // Remove message from database.
+  socket.on("deletemessage", async (req) => {
+    var messageID = req.messageID;
+    var roomID = req.roomID;
+    var userID = req.userID;
 
-				console.log("File:" + message.file +  " deleted");
-			}
-			
-			// Slet besked
-			MessageModel.findByIdAndDelete({id_: message._id}, (err) => {
-				if (err){
-					res.success = false;
-					res.err = "Can't delete message";
-					socket.emit("deletemessage", res);
-					return;
-				}
-			});
-			console.log("Message" + message.text + " deleted");
-			res.success = true;
-			res.err = "Message deleted";
-			socket.emit("deletemessage", res);	
-		}
-	});
+    var room = await RoomModel.find({ _id: req.roomID }, (err) => {
+      if (err) {
+        res.success = false;
+        res.err = "Can't find room ID";
+        socket.emit("deletemessage", res);
+        return;
+      }
+    });
 
-	// for private chat
-	socket.on("joinRoom", function (req) {
-		clientInfo[socket.id] = req;
-		socket.join(req.room);
-		//broadcast new user joined room
-		socket.broadcast.to(req.room).emit("message", {
-			name: "System",
-			text: req.name + " has joined",
-			timestamp: moment().valueOf(),
-		});
-		console.log("User: " + req.name + " has joined room: " + req.room);
-	});
+    var message = await room.find({ messages: req.messageID }, (err) => {
+      if (err) {
+        res.success = false;
+        res.err = "Can't find message ID";
+        socket.emit("deletemessage", res);
+        return;
+      }
+    });
 
-	// to show who is typing Message
+    if (req.userID == room.admin || req.userID == message.sender) {
+      if (message.file.exists()) {
+        // Slet fil
 
-	socket.on("typing", function (message) {
-		// broadcast this message to all users in that room
-		socket.broadcast.to(clientInfo[socket.id].room).emit("typing", message);
-	});
+        console.log("File:" + message.file + " deleted");
+      }
 
-	// to check if user seen Message
-	socket.on("userSeen", function (msg) {
-		socket.broadcast.to(clientInfo[socket.id].room).emit("userSeen", msg);
-		//socket.emit("message", msg);
-	});
+      // Slet besked
+      MessageModel.findByIdAndDelete({ id_: message._id }, (err) => {
+        if (err) {
+          res.success = false;
+          res.err = "Can't delete message";
+          socket.emit("deletemessage", res);
+          return;
+        }
+      });
+      console.log("Message" + message.text + " deleted");
+      res.success = true;
+      res.err = "Message deleted";
+      socket.emit("deletemessage", res);
+    }
+  });
 
-	const messageHelper = new MessageHelper(); //= new MessageHelper();
-	messageHelper.message(socket, "Welcome to Chat Application !");
-	/*socket.emit("message", {
+  // for private chat
+  socket.on("joinRoom", function (req) {
+    clientInfo[socket.id] = req;
+    socket.join(req.room);
+    //broadcast new user joined room
+    socket.broadcast.to(req.room).emit("message", {
+      name: "System",
+      text: req.name + " has joined",
+      timestamp: moment().valueOf(),
+    });
+    console.log("User: " + req.name + " has joined room: " + req.room);
+  });
+
+  // to show who is typing Message
+
+  socket.on("typing", function (message) {
+    // broadcast this message to all users in that room
+    socket.broadcast.to(clientInfo[socket.id].room).emit("typing", message);
+  });
+
+  // to check if user seen Message
+  socket.on("userSeen", function (msg) {
+    socket.broadcast.to(clientInfo[socket.id].room).emit("userSeen", msg);
+    //socket.emit("message", msg);
+  });
+
+  const messageHelper = new MessageHelper(); //= new MessageHelper();
+  messageHelper.message(socket, "Welcome to Chat Application !");
+  /*socket.emit("message", {
 		text: "Welcome to Chat Application !",
 		timestamp: moment().valueOf(),
 		name: "System",
 	});*/
 
-	// listen for client message
-	socket.on("message", function (message) {
-		console.log(
-			"Message Received : " +
-				message.text +
-				"\nFrom room: " +
-				clientInfo[socket.id].room +
-				" \nFrom user: " +
-				clientInfo[socket.id].name
-		);
-		// to show all current users
-		if (message.text === "@currentUsers") {
-			sendCurrentUsers(socket);
-		} else {
-			//broadcast to all users except for sender
-			message.timestamp = moment().valueOf();
-			//socket.broadcast.emit("message",message);
-			// now message should be only sent to users who are in same room
-			socket.broadcast.to(clientInfo[socket.id].room).emit("message", message);
-			//socket.emit.to(clientInfo[socket.id].room).emit("message", message);
-		}
-	});
+  // listen for client message
+  socket.on("message", function (message) {
+    console.log(
+      "Message Received : " +
+        message.text +
+        "\nFrom room: " +
+        clientInfo[socket.id].room +
+        " \nFrom user: " +
+        clientInfo[socket.id].name
+    );
+    // to show all current users
+    if (message.text === "@currentUsers") {
+      sendCurrentUsers(socket);
+    } else {
+      //broadcast to all users except for sender
+      message.timestamp = moment().valueOf();
+      //socket.broadcast.emit("message",message);
+      // now message should be only sent to users who are in same room
+      socket.broadcast.to(clientInfo[socket.id].room).emit("message", message);
+      //socket.emit.to(clientInfo[socket.id].room).emit("message", message);
+    }
+  });
 });
 /* Socket.io for database controllers */
 
 http.listen(PORT, function () {
-	console.log("server started");
+  console.log("server started");
 });
