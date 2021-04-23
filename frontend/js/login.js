@@ -11,26 +11,19 @@ function checkCookieID() {
     if (getCookieID() === null){
         console.log("User has no CookieID");
     } else {
-        console.log("CookieID112312123: ", localStorage.getItem("cookieID"));
         window.location.replace("http://130.225.170.76/room.html");
     }
-}
-
-function checkEmail() {
-    var rfc2822regex = /[a-z0-9!#$%&'*+/=?^_`{|}~-]+(?:\.[a-z0-9!#$%&'*+/=?^_`{|}~-]+)*@(?:[a-z0-9](?:[a-z0-9-]*[a-z0-9])?\.)+[a-z0-9](?:[a-z0-9-]*[a-z0-9])?/;
-    var mail = document.getElementById("email");
-    return rfc2822regex.test(mail);
 }
 
 function checkFormInput(){
     var checkName = document.getElementById("name");
     var checkPassword = document.getElementById("myPassword");
-    if (!checkName.checkValidity || !checkPassword.checkValidity) {
+    if (!checkName.checkValidity() || !checkPassword.checkValidity()) {
         document.getElementById("valid1") = checkName.validationMessage;
         document.getElementById("valid2") = checkPassword.validationMessage;
+        return false;
     } else {
-        document.getElementById("valid1").innerHTML = "Input OK";
-        document.getElementById("valid2").innerHTML = "Input OK";
+        return true;
     }
 }
 
@@ -45,11 +38,15 @@ function showPassword() {
 
 checkCookieID();
 console.log("CookieID: ", getCookieID());
-function main () {
-    checkFormInput();
-    
-    setCookieID(document.getElementById("name").value);
-    if (!checkEmail()){
-        console.log("Not a valid email");
+
+function login() {
+    if (!checkFormInput()){
+        console.log("FOrm not valid");
+    } else{
+        setCookieID(document.getElementById("name").value);
+        window.location.replace("/room.html");
     }
+        
+    
+    
 }

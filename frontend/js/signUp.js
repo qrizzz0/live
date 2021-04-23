@@ -26,10 +26,13 @@ function checkFormInput(){
     var checkEmail = document.getElementById("email");
     var checkUser = document.getElementById("name");
     var checkPassword = document.getElementById("myPassword");
-    if (!checkEmail.checkValidity && !checkUser.checkValidity && !checkPassword.checkValidity) {
+    if (!checkEmail.checkValidity() || !checkUser.checkValidity() || !checkPassword.checkValidity()) {
         document.getElementById("valid1") = checkEmail.validationMessage;
         document.getElementById("valid2") = checkUser.validationMessage;
         document.getElementById("valid3") = checkPassword.validationMessage;
+        return false;
+    } else{
+        return true;
     }
 }
 
@@ -60,21 +63,23 @@ function checkPasswords() {
     if (password === confirmPassword){
         return true;
     } else{
-        document.getElementById("valid4").innerHTML.value = "Passwords must be the same";
         return false;
     }
 }
 
 checkCookieID();
-checkFormInput();
 console.log("CookieID: ", getCookieID());
-function main () {
-    setCookieID(document.getElementById("name").value);
-    if (!checkEmail() || !checkPasswords()){
-        
-        console.log("Not a valid email");
-    } else{}
-        window.location.replace("/room.html")
+function signup () {
+    
+    if(!checkFormInput()){
+        console.log("Not a valid form!")
+    } else if (!checkPasswords()){
+        alert("Passwords must be the same!");
+        console.log("Passwords must be the same!");
+    } else{
+        setCookieID(document.getElementById("name").value);
+        window.location.replace("/room.html");
     }
 }
+
    

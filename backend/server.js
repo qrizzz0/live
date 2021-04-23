@@ -52,7 +52,7 @@ function validateMail(mail) {
 
 // io.on listens for events
 io.sockets.on("connection", function (socket) {
-	new WebSocketUploader(socket);
+	new WebSocketUploader(socket); //Kris will connect this to datasbase
 
 	//for disconnection
 	socket.on("disconnect", function () {
@@ -192,10 +192,13 @@ io.sockets.on("connection", function (socket) {
 	});
 
 	// Websocket for adding friends.
-
+    // Theis will take this
 	// Websocket for removing friends.
+	// And Theis will take this
+
 
 	// Websocket for getting user info.
+	//Theis will try to refactor this
 	socket.on("getuserinfo", (req) => {
 		// UserID is sent.
 		var res = {};
@@ -228,6 +231,7 @@ io.sockets.on("connection", function (socket) {
 		});
 	});
 
+	// MARKUS MARKUS MARKUS MARKUS MARKUS MARKUS MARKUS
 	// Websocket for creating new Rooms
 		// UserId creating room is sent
 		// New room is created in database.
