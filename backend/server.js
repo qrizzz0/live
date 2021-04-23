@@ -233,7 +233,16 @@ io.sockets.on("connection", function (socket) {
 		// New room is created in database.
 		// UserÌD is added to room.
 		// UserID is added as admin.
+		socket.on("createroom", async (req) =>{
+			var roomID = req.roomID;
+			var userID = req.userID;
 
+			//https://mongoosejs.com/docs/models.html
+			RoomModel.create({admin: userID})
+
+
+			socket.emit("createroom", res);
+		});	
 
 	// Websocket for changing admin.
 	// Criteria the new admin must be part of the room.
