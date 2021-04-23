@@ -200,11 +200,18 @@ io.sockets.on("connection", function (socket) {
   });
 
   // Websocket for creating new Rooms
-  socket.on("newroom", (req) => {
-    // UserId creating room is sent
-    // New room is created in database.
-    // UserÌD is added to room.
-    // UserID is added as admin.
+  // UserId creating room is sent
+  // New room is created in database.
+  // UserÌD is added to room.
+  // UserID is added as admin.
+  socket.on("createroom", async (req) => {
+    var roomID = req.roomID;
+    var userID = req.userID;
+
+    //https://mongoosejs.com/docs/models.html
+    RoomModel.create({ admin: userID });
+
+    socket.emit("createroom", res);
   });
 
   // Websocket for changing admin.
@@ -270,84 +277,46 @@ io.sockets.on("connection", function (socket) {
       }
     });
 
-    if (req.userID == room.admin || req.userID == message.sender) {
-      if (message.file.exists()) {
-        // Slet fil
-
-        console.log("File:" + message.file + " deleted");
-      }
-
-      // Slet besked
-      MessageModel.findByIdAndDelete({ id_: message._id }, (err) => {
-        if (err) {
-          res.success = false;
-          res.err = "Can't delete message";
-          socket.emit("deletemessage", res);
-          return;
+    if (room.err == null && message.err == null) {
+      if (req.userID == room.admin || req.userID == message.sender) {
+        if (message.file.exists()) {
+          // Slet fil
+          console.log("File:" + message.file + " deleted");
         }
-      });
-      console.log("Message" + message.text + " deleted");
-      res.success = true;
-      res.err = "Message deleted";
-      socket.emit("deletemessage", res);
+
+        // Slet besked
+        MessageModel.findByIdAndDelete({ id_: message._id }, (err) => {
+          if (err) {
+            res.success = false;
+            res.err = "Can't delete message";
+            socket.emit("deletemessage", res);
+            return;
+          }
+        });
+        console.log("Message" + message.text + " deleted");
+        res.success = true;
+        res.err = "Message deleted";
+        socket.emit("deletemessage", res);
+      }
     }
   });
 
   // for private chat
   socket.on("joinRoom", function (req) {
-    clientInfo[socket.id] = req;
-    socket.join(req.room);
-    //broadcast new user joined room
-    socket.broadcast.to(req.room).emit("message", {
-      name: "System",
-      text: req.name + " has joined",
-      timestamp: moment().valueOf(),
-    });
-    console.log("User: " + req.name + " has joined room: " + req.room);
+    roomHandler.joinRoom(socket, "joinRoom", req);
   });
 
-  // to show who is typing Message
+  // Room welcome message
+  messageHandler.message(socket, "Welcome to Chat Application !");
 
+  // listen for client typing messages
   socket.on("typing", function (message) {
-    // broadcast this message to all users in that room
-    socket.broadcast.to(clientInfo[socket.id].room).emit("typing", message);
+    messageHandler.broadcastTyping(socket, message);
   });
-
-  // to check if user seen Message
-  socket.on("userSeen", function (msg) {
-    socket.broadcast.to(clientInfo[socket.id].room).emit("userSeen", msg);
-    //socket.emit("message", msg);
-  });
-
-  const messageHelper = new MessageHelper(); //= new MessageHelper();
-  messageHelper.message(socket, "Welcome to Chat Application !");
-  /*socket.emit("message", {
-		text: "Welcome to Chat Application !",
-		timestamp: moment().valueOf(),
-		name: "System",
-	});*/
 
   // listen for client message
   socket.on("message", function (message) {
-    console.log(
-      "Message Received : " +
-        message.text +
-        "\nFrom room: " +
-        clientInfo[socket.id].room +
-        " \nFrom user: " +
-        clientInfo[socket.id].name
-    );
-    // to show all current users
-    if (message.text === "@currentUsers") {
-      sendCurrentUsers(socket);
-    } else {
-      //broadcast to all users except for sender
-      message.timestamp = moment().valueOf();
-      //socket.broadcast.emit("message",message);
-      // now message should be only sent to users who are in same room
-      socket.broadcast.to(clientInfo[socket.id].room).emit("message", message);
-      //socket.emit.to(clientInfo[socket.id].room).emit("message", message);
-    }
+    messageHandler.messageFromUsers(socket, message);
   });
 });
 /* Socket.io for database controllers */
