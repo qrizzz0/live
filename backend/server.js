@@ -1,3 +1,5 @@
+import { message } from "./helperFunctions/message.js";
+
 var PORT = process.env.PORT || 3000; // take port from heroku or for loacalhost
 var WebSocketUploader = require("./WebSocketUploader/WebSocketUploader.js");
 
@@ -226,7 +228,10 @@ io.sockets.on("connection", function (socket) {
 
 	// Websocket for getting user info.
 	socket.on("getuserinfo", (req) => {
+		// UserID is sent.
 		var res = {};
+
+		// User is found.
 		UserModel.findOne({ _id: req.uid }, (err, doc) => {
 			if (err) {
 				res.success = false;
@@ -235,16 +240,27 @@ io.sockets.on("connection", function (socket) {
 				console.log("ERR: " + err);
 				return;
 			}
-			doc.select(basicUserInfo, (err, doc) => {});
+
+			// Keep only basic infomation.
+			doc.select(basicUserInfo, (err, doc) => {
+				if (err) {
+					res.success = false;
+					res.err = err;
+					socket.emit("getuserinfo", res);
+					console.log("ERR: " + err);
+					return;
+				}
+
+				// Send back userinfo.
+				res.success = true;
+				res.user = doc;
+				socket.emit("getuserinfo", res);
+			});
 		});
 	});
 
-	// UserID is sent.
-	// User is found.
-	// Send back userinfo.
-	//
-
 	// Websocket for creating new Rooms
+	socket.on("newroom", (req) => {});
 	// UserId creating room is sent
 	// New room is created in database.
 	// UserÌD is added to room.
@@ -283,6 +299,7 @@ io.sockets.on("connection", function (socket) {
 	// Add message to room.
 	// Broadcast message to members.
 
+	socket.on("deletemessage");
 	// Delete message.
 	// Message info is sent.
 	// If there is a file.

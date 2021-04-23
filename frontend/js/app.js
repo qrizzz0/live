@@ -29,6 +29,7 @@ function timeoutFunction() {
 	socket.emit("typing", {
 		text: "", //name + " stopped typing"
 	});
+	
 }
 
 ///////////////// Clean this up
