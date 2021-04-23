@@ -2,7 +2,7 @@ const { throws } = require('assert');
 const fs = require('fs');
 const CryptoJS = require('crypto-js');
 
-class WebSocketUploader {
+class WebSocketFileUpload {
     data = [];
 
     constructor(socket, fileInput) {
@@ -19,6 +19,7 @@ class WebSocketUploader {
     //Currently we save entire file in RAM before writing to disk. To support very large files (100mb+) we should probably write to disk
     push(slice) {
         //Do sanity checks of the slice - if something is weird we abort the transfer.
+        // This could be replaced with progressive hashing.
         var md5 = CryptoJS.SHA256(slice.data);
         if (slice.data == null || slice.datahash != md5) {
             console.log("Something wrong with a slice of data for file: " + this.id + " - Aborting.")
@@ -67,7 +68,7 @@ class WebSocketUploader {
 }
 
 
-module.exports = WebSocketUploader
+module.exports = WebSocketFileUpload
 
 
 

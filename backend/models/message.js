@@ -1,11 +1,11 @@
 const mongoose = require("mongoose");
 
 const messageSchema = new mongoose.Schema({
-	_id: ObjectID,
-	sender: ObjectID,
+	_id: mongoose.Types.ObjectId,
+	sender: { type: mongoose.Types.ObjectId, ref: "User" },
 	timestamp: Date,
 	text: String,
-	file: ObjectID,
+	file: { type: mongoose.Types.ObjectId, ref: "File" },
 });
 
 const Message = mongoose.model("Message", messageSchema);
