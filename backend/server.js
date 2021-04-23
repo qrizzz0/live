@@ -17,7 +17,8 @@ var FileModel = require("./models/file");
 var RoomModel = require("./models/room");
 var MessageModel = require("./models/message");
 
-var MessageHelper = require("./helperFunctions/message.js");
+var MessageHandler = require("./handlers/messageHandler.js");
+var RoomHandler = require("./handlers/roomHandler.js");
 
 var http = require("http").Server();
 
@@ -27,13 +28,14 @@ const basicUserInfo = ["username", "email"];
 var moment = require("moment");
 const fs = require("fs");
 
-var clientInfo = {};
-var currentUploads = {};
+var clientInfo = new Array();
+const messageHandler = new MessageHandler(clientInfo);
+const roomHandler = new RoomHandler(clientInfo, messageHandler);
 
 //socket io module
 var io = require("socket.io")(http, {
   cors: {
-    origin: "http://172.23.96.245:3000",
+    origin: "http://130.225.170.76",
     methods: ["GET", "POST"],
   },
 });
@@ -46,32 +48,6 @@ var io = require("socket.io")(http, {
 function validateMail(mail) {
   var rfc2822regex = /[a-z0-9!#$%&'*+/=?^_`{|}~-]+(?:\.[a-z0-9!#$%&'*+/=?^_`{|}~-]+)*@(?:[a-z0-9](?:[a-z0-9-]*[a-z0-9])?\.)+[a-z0-9](?:[a-z0-9-]*[a-z0-9])?/;
   return rfc2822regex.test(mail);
-}
-
-// send current users to provided scoket
-function sendCurrentUsers(socket) {
-  // loading current users
-  var info = clientInfo[socket.id];
-  var users = [];
-  if (typeof info === "undefined") {
-    return;
-  }
-  // filte name based on rooms
-  Object.keys(clientInfo).forEach(function (socketId) {
-    var userinfo = clientInfo[socketId];
-    // check if user room and selcted room same or not
-    // as user should see names in only his chat room
-    if (info.room == userinfo.room) {
-      users.push(userinfo.name);
-    }
-  });
-  // emit message when all users list
-
-  socket.emit("message", {
-    name: "System",
-    text: "Current Users : " + users.join(", "),
-    timestamp: moment().valueOf(),
-  });
 }
 
 // io.on listens for events
