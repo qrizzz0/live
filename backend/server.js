@@ -281,16 +281,46 @@ io.sockets.on("connection", function (socket) {
 		var roomID = req.roomID;
 		var userID = req.userID;
 
-		UserModel.findOne({ _id: req.userID }, (err, doc) => {
-			if (err) {
-				// Error ting
+		var room = await RoomModel.find({_id: req.roomID}, (err) => {
+			if (err){
+				res.success = false;
+				res.err = "Can't find room ID";
+				socket.emit("deletemessage", res);
+				return;			
 			}
 		});
-		RoomModel.find({ messages: req.messageID }, (err, doc) => {
-			if (err) {
-				// Error ting
+
+		var message = await room.find({messages: req.messageID}, (err) => {
+			if (err){
+				res.success = false;
+				res.err = "Can't find message ID";
+				socket.emit("deletemessage", res);
+				return;			
 			}
 		});
+
+		if (req.userID == room.admin || req.userID == message.sender)
+		{
+			if (message.file.exists()){
+				// Slet fil
+
+				console.log("File:" + message.file +  " deleted");
+			}
+			
+			// Slet besked
+			MessageModel.findByIdAndDelete({id_: message._id}, (err) => {
+				if (err){
+					res.success = false;
+					res.err = "Can't delete message";
+					socket.emit("deletemessage", res);
+					return;
+				}
+			});
+			console.log("Message" + message.text + " deleted");
+			res.success = true;
+			res.err = "Message deleted";
+			socket.emit("deletemessage", res);	
+		}
 	});
 
 	// for private chat
