@@ -7,4 +7,13 @@ function getCookieID() {
     return cID;
 }
 
-setCookieID("test");
+function checkCookieID() {
+    if (!getCookieID().empty){
+        //window.location.replace("http://130.225.170.76/room.html")
+    } else {
+        setCookieID("tester123");
+    }
+}
+
+checkCookieID();
+console.log(getCookieID());
