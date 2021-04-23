@@ -334,9 +334,19 @@ io.sockets.on("connection", function (socket) {
 		{
 			if (message.file.exists()){
 				// Slet fil
+
 				console.log("File:" + message.file +  " deleted");
 			}
+			
 			// Slet besked
+			MessageModel.findByIdAndDelete({id_: message._id}, (err) => {
+				if (err){
+					res.success = false;
+					res.err = "Can't delete message";
+					socket.emit("deletemessage", res);
+					return;
+				}
+			});
 			console.log("Message" + message.text + " deleted");
 			res.success = true;
 			res.err = "Message deleted";
