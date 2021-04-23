@@ -5,5 +5,3 @@ function message(socket, textString) {
 		name: "System",
 	});
 }
-
-export { message };

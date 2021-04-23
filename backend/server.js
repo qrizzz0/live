@@ -1,4 +1,4 @@
-import { message } from "./helperFunctions/message.js";
+var helpMessage = require("./helperFunctions/message.js");
 
 var PORT = process.env.PORT || 3015; // take port from heroku or for loacalhost
 var WebSocketUploader = require("./WebSocketUploader/WebSocketUploader.js");
@@ -335,7 +335,7 @@ io.sockets.on("connection", function (socket) {
 		//socket.emit("message", msg);
 	});
 
-	message("message", "Welcome to Chat Application !");
+	helpmessage.message("message", "Welcome to Chat Application !");
 	/*socket.emit("message", {
 		text: "Welcome to Chat Application !",
 		timestamp: moment().valueOf(),
