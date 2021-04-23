@@ -17,7 +17,8 @@ var FileModel = require("./models/file");
 var RoomModel = require("./models/room");
 var MessageModel = require("./models/message");
 
-var MessageHelper = require("./helperFunctions/message.js");
+var MessageHandler = require("./handlers/messageHandler.js");
+var RoomHandler = require("./handlers/roomHandler.js");
 
 var http = require("http").Server();
 
@@ -27,8 +28,9 @@ const basicUserInfo = ["username", "email"];
 var moment = require("moment");
 const fs = require("fs");
 
-var clientInfo = {};
-var currentUploads = {};
+var clientInfo = new Array();
+const messageHandler = new MessageHandler(clientInfo);
+const roomHandler = new RoomHandler(clientInfo, messageHandler);
 
 //socket io module
 var io = require("socket.io")(http, {
@@ -46,32 +48,6 @@ var io = require("socket.io")(http, {
 function validateMail(mail) {
 	var rfc2822regex = /[a-z0-9!#$%&'*+/=?^_`{|}~-]+(?:\.[a-z0-9!#$%&'*+/=?^_`{|}~-]+)*@(?:[a-z0-9](?:[a-z0-9-]*[a-z0-9])?\.)+[a-z0-9](?:[a-z0-9-]*[a-z0-9])?/;
 	return rfc2822regex.test(mail);
-}
-
-// send current users to provided scoket
-function sendCurrentUsers(socket) {
-	// loading current users
-	var info = clientInfo[socket.id];
-	var users = [];
-	if (typeof info === "undefined") {
-		return;
-	}
-	// filte name based on rooms
-	Object.keys(clientInfo).forEach(function (socketId) {
-		var userinfo = clientInfo[socketId];
-		// check if user room and selcted room same or not
-		// as user should see names in only his chat room
-		if (info.room == userinfo.room) {
-			users.push(userinfo.name);
-		}
-	});
-	// emit message when all users list
-
-	socket.emit("message", {
-		name: "System",
-		text: "Current Users : " + users.join(", "),
-		timestamp: moment().valueOf(),
-	});
 }
 
 // io.on listens for events
@@ -215,13 +191,6 @@ io.sockets.on("connection", function (socket) {
 			});
 	});
 
-	socket.on("get rooms", function (hej) {
-		socket.emit("list of rooms", {
-			roomCount: 0,
-			etc: "et eller andet who knows",
-		});
-	});
-
 	// Websocket for adding friends.
 
 	// Websocket for removing friends.
@@ -307,7 +276,7 @@ io.sockets.on("connection", function (socket) {
 	// Delete physical file.
 	// Remove file from database.
 	// Remove message from database.
-	socket.on("deletemessage", (req) =>{
+	socket.on("deletemessage", (req) => {
 		var messageID = req.messageID;
 		var roomID = req.roomID;
 		var userID = req.userID;
@@ -356,59 +325,20 @@ io.sockets.on("connection", function (socket) {
 
 	// for private chat
 	socket.on("joinRoom", function (req) {
-		clientInfo[socket.id] = req;
-		socket.join(req.room);
-		//broadcast new user joined room
-		socket.broadcast.to(req.room).emit("message", {
-			name: "System",
-			text: req.name + " has joined",
-			timestamp: moment().valueOf(),
-		});
-		console.log("User: " + req.name + " has joined room: " + req.room);
+		roomHandler.joinRoom(socket, "joinRoom", req);
 	});
 
-	// to show who is typing Message
+	// Room welcome message
+	messageHandler.message(socket, "Welcome to Chat Application !");
 
+	// listen for client typing messages
 	socket.on("typing", function (message) {
-		// broadcast this message to all users in that room
-		socket.broadcast.to(clientInfo[socket.id].room).emit("typing", message);
+		messageHandler.broadcastTyping(socket, message);
 	});
-
-	// to check if user seen Message
-	socket.on("userSeen", function (msg) {
-		socket.broadcast.to(clientInfo[socket.id].room).emit("userSeen", msg);
-		//socket.emit("message", msg);
-	});
-
-	const messageHelper = new MessageHelper(); //= new MessageHelper();
-	messageHelper.message(socket, "Welcome to Chat Application !");
-	/*socket.emit("message", {
-		text: "Welcome to Chat Application !",
-		timestamp: moment().valueOf(),
-		name: "System",
-	});*/
 
 	// listen for client message
 	socket.on("message", function (message) {
-		console.log(
-			"Message Received : " +
-				message.text +
-				"\nFrom room: " +
-				clientInfo[socket.id].room +
-				" \nFrom user: " +
-				clientInfo[socket.id].name
-		);
-		// to show all current users
-		if (message.text === "@currentUsers") {
-			sendCurrentUsers(socket);
-		} else {
-			//broadcast to all users except for sender
-			message.timestamp = moment().valueOf();
-			//socket.broadcast.emit("message",message);
-			// now message should be only sent to users who are in same room
-			socket.broadcast.to(clientInfo[socket.id].room).emit("message", message);
-			//socket.emit.to(clientInfo[socket.id].room).emit("message", message);
-		}
+		messageHandler.messageFromUsers(socket, message);
 	});
 });
 /* Socket.io for database controllers */
