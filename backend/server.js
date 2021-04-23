@@ -1,6 +1,4 @@
-var helpMessage = require("./helperFunctions/message.js");
-
-var PORT = process.env.PORT || 3015; // take port from heroku or for loacalhost
+var PORT = process.env.PORT || 3000; // take port from heroku or for loacalhost
 var WebSocketUploader = require("./WebSocketUploader/WebSocketUploader.js");
 
 var mongoose = require("mongoose");
@@ -18,6 +16,8 @@ var UserModel = require("./models/user");
 var FileModel = require("./models/file");
 var RoomModel = require("./models/room");
 var MessageModel = require("./models/message");
+
+var helpMessage = require("./helperFunctions/message.js");
 
 var http = require("http").Server();
 
