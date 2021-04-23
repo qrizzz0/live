@@ -336,11 +336,12 @@ io.sockets.on("connection", function (socket) {
 		//socket.emit("message", msg);
 	});
 
-	socket.emit("message", {
+	message("message", "Welcome to Chat Application !");
+	/*socket.emit("message", {
 		text: "Welcome to Chat Application !",
 		timestamp: moment().valueOf(),
 		name: "System",
-	});
+	});*/
 
 	// listen for client message
 	socket.on("message", function (message) {
