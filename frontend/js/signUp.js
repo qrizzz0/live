@@ -70,13 +70,11 @@ checkFormInput();
 console.log("CookieID: ", getCookieID());
 function main () {
     setCookieID(document.getElementById("name").value);
-    if (!checkEmail()){
+    if (!checkEmail() || !checkPasswords()){
         
         console.log("Not a valid email");
-    } 
-    if (!checkPasswords()){
-        alert("Passwords must be the same!")
-        console.log("Passwords aren't the same");
+    } else{}
+        window.location.replace("/room.html")
     }
-    window.location.replace("/room.html")
 }
+   
