@@ -1,12 +1,15 @@
 var socket = io.connect("http://130.225.170.76:3000");
 // listen for server connection
 // get query params from url
-var name = getQueryVariable("name") || "Anonymous";
 var room = getQueryVariable("room") || "No Room Selected";
 
 var currentUploads = {};
 
+console.log("Local storage: ", localStorage.getItem("cookieID"));
+
+//document.getElementById("room-title").innerHTML = room;
 $(".room-title").text(room);
+console.log("Room: ", room);
 // fires when client successfully conencts to the server
 socket.on("connect", function () {
 	console.log("Connected to Socket I/O Server!");
@@ -81,15 +84,6 @@ function uploadFileBetter() {
 		}
 	}
 	document.getElementById("file").value = "";
-}
-
-function showPassword() {
-	var getPassword = document.getElementById("myPassword");
-	if (getPassword.type === "password") {
-		getPassword.type = "text";
-	} else {
-		getPassword.type = "password";
-	}
 }
 
 socket.on("request next slice", function (input) {

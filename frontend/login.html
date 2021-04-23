@@ -23,19 +23,6 @@
             <h1 class="text-center">
               Chat Application !</h1>
             <form action="/room.html">
-              
-              <div class="form-group">
-                  <label for="name">
-                    Email:</label>
-                  <div class="input-group">
-                    <span class="input-group-addon">
-                      <i class="glyphicon glyphicon-user"></i>
-                    </span>
-                    <input class="form-control" id="email" name="email" placeholder="" type="email" required>
-                    <p id="valid1"></p>
-                  </div>
-              </div>
-
               <div class="form-group">
                 <label for="name">
                 User Name:</label>
@@ -44,47 +31,35 @@
                     <i class="glyphicon glyphicon-user"></i>
                   </span>
                   <input class="form-control" id="name" name="name" placeholder="" type="text" required>
-                  <p id="valid2"></p>  
+                  <p id="valid1"></p>  
                 </div>
               </div>
 
-              <label for="name">
               Password:</label>
               <div class="input-group">
                 <span class="input-group-addon">
                   <i class="bi bi-lock-fill"></i>
                 </span>
                 <input class="form-control" id="myPassword" placeholder="" type="password" required>
-                <p id="valid3"></p>  
+                <p id="valid2"></p>  
               </div>
-              <input type="checkbox" onclick="showPassword()"> Show Password <br> <br>
+              <input type="checkbox" onclick="showPassword()"> Show Password 
 
-              <label for="name">
-                Confirm password:</label>
-                <div class="input-group">
-                  <span class="input-group-addon">
-                    <i class="bi bi-lock-fill"></i>
-                  </span>
-                  <input class="form-control" id="confirmPassword" placeholder="" type="password" required>
-                  <p id="valid4"></p>  
-                </div>
-                <input type="checkbox" onclick="showConfirmPassword()"> Show Password <br> <br>
+              <div class="form-group">
+                <input class="btn btn-primary btn-block" onclick="main()" type="submit" value="Login"/>
+              </div>
+              
+              <h5 class="pull-right">Not a user?</h5> <br> <br>
+              <a class="pull-right btn btn-primary" href="/index.html">
+                <i class="bi bi-box-login"></i>
+                Sign up!
+             </a>
 
             </form>
-            <div class="form-group">
-              <input class="btn btn-primary btn-block" onclick="main()" type="submit" value="Join Chat"/>
-            </div>
-
-            <h5 class="pull-right">Already a user?</h5> <br> <br>
-            <a class="pull-right btn btn-primary" href="/login.html">
-              <i class="bi bi-box-login"></i>
-              Login
-           </a>
           </div>
         </div>
       </div>
     </div>
   </body>
 </html>
-<script src="/js/signUp.js"></script>
-
+<script src="/js/login.js"></script>
