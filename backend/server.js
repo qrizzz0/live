@@ -106,56 +106,34 @@ io.sockets.on("connection", function (socket) {
     var user = req;
 
     // Authenticate mail and password;
-    var doc = await UserModel.find({ email: user.email }).exec();
-    if (doc.error()) {
-      res.success = false;
-      res.err = "Error happened during lookup for email";
-      socket.emit("login", res);
-      return;
-    }
-    if (doc.length != 1) {
-      //Doesn't exist or multiple instances of user.
-      res.success = false;
-      res.err =
-        "Email couldn't be identified, either multiple instances or none exist.";
-      socket.emit("login", res);
-      return;
-    }
-    // Select password from user. Match the stored password with the given.
-    docs.select("hashed_password").exec((password) => {
-      if (password.equals(user.password)) {
-        // Emit true if authenticated.
-        res.success = true;
-        res.user = docs;
-        socket.emit("login", res);
-      } else {
-        // Emit false if not authenticated.
-        // Wrong password
-        res.success = false;
-        res.err = "Wrong password!";
-        socket.emit("login", res);
-        return;
+    var doc = await UserModel.findOne({ email: user.email }).exec(
+      (err, doc) => {
+        if (err) {
+          // Emit true if authenticated.
+          res.success = true;
+          res.user = docs;
+          socket.emit("login", res);
+        }
+        // Select password from user. Match the stored password with the given.
+        if (doc.hashed_password === user.password) {
+          // Emit true if authenticated.
+          res.success = true;
+          res.user = doc;
+          socket.emit("login", res);
+        } else {
+          // Emit false if not authenticated.
+          // Wrong password
+          res.success = false;
+          res.err = "Wrong password!";
+          socket.emit("login", res);
+          return;
+        }
       }
-    });
-    /*
-		if (database.brugernavn.exists) {
-			if (hej.passwordhash == database.passwordhash) {
-				clientInfo[socket.id].user = "kristofer";
-			} else {
-				socket.emit("failed password", {
-					besked: "fuck dig dit brugernavn eksitstweteqet ikke",
-				});
-			}
-		}
-
-		*/
+    );
   });
 
   socket.on("signup", async (req) => {
-    console.log("Signing up user!");
     var res = {};
-    console.log(req);
-
     // Get signup information about the new user.
     var newuser = req;
     newuser._id = new mongoose.Types.ObjectId();
