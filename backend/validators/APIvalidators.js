@@ -23,7 +23,10 @@ let validators = {
     roomid: "",
     uid: "",
   },
-  leaveroom: {},
+  leaveroom: {
+    uid: "",
+    roomid: "",
+  },
   joinroom: {
     uid: "",
     roomid: "",

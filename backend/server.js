@@ -279,7 +279,7 @@ io.sockets.on("connection", function (socket) {
     var room = new RoomModel(rewroom);
 
     // Add the room to database.
-    room.save((err) => {
+    room.save(async (err) => {
       if (err) {
         res.success = false;
         res.err = err;
@@ -288,25 +288,23 @@ io.sockets.on("connection", function (socket) {
       }
 
       // Room is added to users list of rooms.
-      UserModel.findOneAndUpdate(
+      let updated = await UserModel.updateOne(
         { _id: req.uid },
         {
           $push: {
             rooms: newroom._id,
           },
-        },
-        (err) => {
-          if (err) {
-            res.success = false;
-            res.err = err;
-            socket.emit("createroom", res);
-            return;
-          }
-
-          res.success = true;
-          socket.emit("createroom", res);
         }
       );
+      if (!(updated.nModified > 0)) {
+        res.success = false;
+        res.err = err;
+        socket.emit("createroom", res);
+        return;
+      }
+
+      res.success = true;
+      socket.emit("createroom", res);
     });
   });
 
@@ -325,7 +323,7 @@ io.sockets.on("connection", function (socket) {
       socket.emit("changeadmin", res);
       return;
     }
-
+    // TODO: Fix error checking
     // Get list of users in the requested room.
     let users = await RoomModel.findOne({ _id: req.roomid })
       .select("users")
@@ -344,20 +342,19 @@ io.sockets.on("connection", function (socket) {
       return;
     }
     // Find the room and update the admin to the newadmin.
-    let users = RoomModel.findOneAndUpdate(
+    let updated = await RoomModel.updateOne(
       { _id: req.roomid },
-      { admin: req.newadminid },
-      (err) => {
-        if (err) {
-          res.success = false;
-          res.err = err;
-          socket.emit("changeadmin", res);
-          return;
-        }
-        res.success = true;
-        socket.emit("changeadmin", res);
-      }
+      { admin: req.newadminid }
     );
+    if (!(updated.nModified > 0)) {
+      res.success = false;
+      res.err = err;
+      socket.emit("changeadmin", res);
+      return;
+    }
+
+    res.success = true;
+    socket.emit("changeadmin", res);
   });
 
   // VALDEMAR NOT TESTED
@@ -393,9 +390,9 @@ io.sockets.on("connection", function (socket) {
     // TODO: Remember to delete the locally stored files.
     let deleted = await MessageModel.deleteMany({
       _id: { $in: room.messages },
-    }).exec();
-    console.log(deleted);
-    if (!deleted) {
+    });
+
+    if (!(deleted.deletedCount > 0)) {
       res.success = false;
       res.err = "Messages couldn't be deleted";
       socket.emit("removeroom", res);
@@ -406,9 +403,8 @@ io.sockets.on("connection", function (socket) {
     let updated = await UserModel.updateMany(
       { _id: { $in: room.users } },
       { $pull: { rooms: { _id: room._id } } }
-    ).exec();
-    console.log(updated);
-    if (!updated) {
+    );
+    if (!(updated.nModified > 0)) {
       res.success = false;
       res.err = "Messages couldn't be deleted";
       socket.emit("removeroom", res);
@@ -445,19 +441,16 @@ io.sockets.on("connection", function (socket) {
     }
 
     // Add user to room list.
-    let room = await RoomModel.findOneAndUpdate(
+    let updated = await RoomModel.updateOne(
       { _id: req.roomid }, // Filter
       {
         // Update
         $push: {
           users: req.uid,
         },
-      }, // Options
-      {
-        new: true, // Returns the updated document.
       }
     );
-    if (room === null) {
+    if (!(updated.nModified > 0)) {
       res.success = false;
       res.err = "Room couldn't be identified";
       socket.emit("joinroom", res);
@@ -465,19 +458,16 @@ io.sockets.on("connection", function (socket) {
     }
 
     // Add room to user list.
-    let user = await UserModel.findOneAndUpdate(
+    updated = await UserModel.updateOne(
       { _id: req.uid }, // Filter
       {
         // Update
         $push: {
           rooms: req.roomid,
         },
-      }, // Options
-      {
-        new: true, // Returns the updated document.
       }
     );
-    if (user === null) {
+    if (!(updated.nModified > 0)) {
       res.success = false;
       res.err = "User couldn't be identified";
       socket.emit("joinroom", res);
@@ -492,13 +482,47 @@ io.sockets.on("connection", function (socket) {
     // Send back list of messages.
   });
 
-  // VALDEMAR
+  // VALDEMAR NOT TESTED
   // Websocket for leaving rooms.
   // UserInfo is sent.
   // Find the wished room.
   // remove user from room.
+  // remove the room from the user.
   socket.on("leaveroom", async (req) => {
     var res = {};
+    if (!validateInput(req, apiinput.leaveroom)) {
+      res.success = false;
+      res.err = "Invalid JSON Request";
+      socket.emit("leaveroom", res);
+      return;
+    }
+
+    // Remove user from the room.
+    let updated = await RoomModel.updateOne(
+      { _id: req.roomid },
+      { $pull: { users: { _id: req.uid } } }
+    );
+    if (!(updated.nModified > 0)) {
+      res.success = false;
+      res.err = "User couldn't be removed from the room";
+      socket.emit("leaveroom", res);
+      return;
+    }
+
+    // Remove room from the user.
+    updated = await UserModel.updateOne(
+      { _id: req.uid },
+      { $pull: { rooms: { _id: req.roomid } } }
+    );
+    if (!(updated.nModified > 0)) {
+      res.success = false;
+      res.err = "Room couldn't be removed from the user";
+      socket.emit("leaveroom", res);
+      return;
+    }
+
+    res.success = true;
+    socket.emit("leaveroom", res);
   });
 
   // Websocket for handling messages.
