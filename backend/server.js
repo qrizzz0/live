@@ -54,6 +54,7 @@ function validateMail(mail) {
   return rfc2822regex.test(mail);
 }
 
+// Maybe move into API validator.
 function validateInput(input, expected){
   var inputKeys = Object.keys(input);
   var expectedKeys = Object.keys(expected);
@@ -122,7 +123,7 @@ io.sockets.on("connection", function (socket) {
           return;
         }
         // Select password from user. Match the stored password with the given.
-        if (doc.hashed_password === user.password) {
+        if (doc.hashed_password === user.hashed_password) {
           // Emit true if authenticated.
           res.success = true;
           res.user = doc;
@@ -138,6 +139,7 @@ io.sockets.on("connection", function (socket) {
       }
     );
   });
+
    /* Server side signup functionality.
   expected req.
     {
@@ -151,8 +153,15 @@ io.sockets.on("connection", function (socket) {
   socket.on("signup", async (req) => {
     var res = {};
     // Get signup information about the new user.
+    if(!validateInput(req, apiinput.signup)){
+      res.success = false;
+      res.err = "Invalid JSON Request";
+      socket.emit("signup", res);
+      return;
+};
     var newuser = req;
     newuser._id = new mongoose.Types.ObjectId();
+    
     // Validate mailstring
     if (!validateMail(newuser.email)) {
       res.success = false;
@@ -169,7 +178,6 @@ io.sockets.on("connection", function (socket) {
       socket.emit("signup", res);
       return;
     }
-
     var doc = await UserModel.exists({ username: newuser.username });
     if (doc) {
       //true if at least one case is found.
@@ -210,35 +218,30 @@ io.sockets.on("connection", function (socket) {
 	// Websocket for getting user info.
 	//Theis will try to refactor this
   socket.on("getuserinfo", (req) => {
+    
     // UserID is sent.
     var res = {};
+ // Get userID information about the new user.
+ if(!validateInput(req, apiinput.getuserinfo)){
+  res.success = false;
+  res.err = "Invalid JSON Request";
+  socket.emit("getuserinfo", res);
+  return;
+};
+// Find user and sort out only basic info.
+UserModel.findOne({ _id: req.uid }).select(basicUserInfo).exec((err, doc) => {
+  if (err) {
+    res.success = false;
+    res.err = err;
+    socket.emit("getuserinfo", res);
+    return;
+  }
 
-    // User is found.
-    UserModel.findOne({ _id: req.uid }, (err, doc) => {
-      if (err) {
-        res.success = false;
-        res.err = err;
-        socket.emit("getuserinfo", res);
-        console.log("ERR: " + err);
-        return;
-      }
-
-      // Keep only basic infomation.
-      doc.select(basicUserInfo, (err, doc) => {
-        if (err) {
-          res.success = false;
-          res.err = err;
-          socket.emit("getuserinfo", res);
-          console.log("ERR: " + err);
-          return;
-        }
-
-        // Send back userinfo.
-        res.success = true;
-        res.user = doc;
-        socket.emit("getuserinfo", res);
-      });
-    });
+  // Send back userinfo.
+  res.success = true;
+  res.user = doc;
+  socket.emit("getuserinfo", res);
+});
   });
 
   
@@ -259,6 +262,7 @@ io.sockets.on("connection", function (socket) {
   });
 
   // Websocket for changing admin.
+  // Find room.
   // Criteria the new admin must be part of the room.
   // UserInfo for the new admin is sent.
   // User is found.

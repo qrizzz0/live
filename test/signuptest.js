@@ -9,7 +9,7 @@ function sleep(ms) {
   socket.on("connect", () => {
       test();
     });
-  socket.on("login", (res)=>{
+  socket.on("signup", (res)=>{
       console.log(res);
   })
   
@@ -19,6 +19,11 @@ let validuser = {
     hashed_password: "Bubber",
 }
 
+let alreadyuser = {
+    email: "pingvin@lagger.com",
+    username: "Bubber",
+    hashed_password: "Bubber",
+}
 
 let invaliduser = {
     email: "pingvin@localhost",
@@ -34,11 +39,13 @@ let notuser = {
 
 async function test (){
     await sleep(1000)
-    socket.emit("login", validuser);
+    socket.emit("signup", validuser);
     await sleep(1000)
-    socket.emit("login", invaliduser);
+    socket.emit("signup", alreadyuser);
     await sleep(1000)
-    socket.emit("login", notuser);
+    socket.emit("signup", invaliduser);
+    await sleep(1000)
+    socket.emit("signup", notuser);
     await sleep(1000)
     socket.disconnect();
     }

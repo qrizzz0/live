@@ -7,6 +7,9 @@ let validators = {
         email: "",
         username: "",
         hashed_password: "",
+    },
+    "getuserinfo": {
+        uid: ""
     }
 }
 module.exports = validators;
