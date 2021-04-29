@@ -3,6 +3,10 @@ var WebSocketUploader = require("./WebSocketUploader/WebSocketUploader.js");
 
 var mongoose = require("mongoose");
 
+var _ = require('lodash');
+
+const apiinput = require("./validators/APIvalidators");
+
 mongoose.connect("mongodb://localhost/chattest", {
   useNewUrlParser: true,
   useUnifiedTopology: true,
@@ -50,6 +54,12 @@ function validateMail(mail) {
   return rfc2822regex.test(mail);
 }
 
+function validateInput(input, expected){
+  var inputKeys = Object.keys(input);
+  var expectedKeys = Object.keys(expected);
+  return _.isEqual(inputKeys, expectedKeys);
+}
+
 // io.on listens for events
 io.sockets.on("connection", function (socket) {
   new WebSocketUploader(socket); //Kris will connect this to datasbase
@@ -81,10 +91,16 @@ io.sockets.on("connection", function (socket) {
 		Wants mail and hashed_password.
 		Returns err on failure
 		Returns user object on success*/
-  socket.on("login", async function (req) {
-    // Check request for proper format.
-    
+  socket.on("login", function (req) {
     var res = {};
+
+    if(!validateInput(req, apiinput.login)){
+          res.success = false;
+          res.err = "Invalid JSON Request";
+          socket.emit("login", res);
+          return;
+    };
+
     // get user information; mail and hashed password
     var user = req;
 
