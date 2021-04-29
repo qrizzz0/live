@@ -23,5 +23,10 @@ let validators = {
     uid: "",
     roomid: "",
   },
+  changeadmin: {
+    uid: "",
+    roomid: "",
+    newadminid: "",
+  },
 };
 module.exports = validators;

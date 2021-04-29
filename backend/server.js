@@ -310,13 +310,54 @@ io.sockets.on("connection", function (socket) {
     });
   });
 
+  // VALDEMAR NOT TESTED
   // Websocket for changing admin.
   // Find room.
   // Criteria the new admin must be part of the room.
   // UserInfo for the new admin is sent.
   // User is found.
   // Room is found and update the admin to the new user.
+  socket.on("changeadmin", (req) => {
+    res = {};
+    if (!validateInput(req, apiinput.joinroom)) {
+      res.success = false;
+      res.err = "Invalid JSON Request";
+      socket.emit("changeadmin", res);
+      return;
+    }
 
+    // Get list of users in the requested room.
+    let users = RoomModel.findOne({ _id: req.roomid }).select("users").exec();
+    if (users === null) {
+      res.success = false;
+      res.err = "Invalid JSON Request";
+      socket.emit("changeadmin", res);
+      return;
+    }
+    // Check if the new admin is in the list of users.
+    if (!users.includes(req.newadminid)) {
+      res.success = false;
+      res.err = "The user is not a part of the chat.";
+      socket.emit("changeadmin", res);
+      return;
+    }
+    // Find the room and update the admin to the newadmin.
+    let users = RoomModel.findOneAndUpdate(
+      { _id: req.roomid },
+      { admin: req.newadminid },
+      (err) => {
+        if (err) {
+          res.success = false;
+          res.err = err;
+          socket.emit("changeadmin", res);
+          return;
+        }
+        res.success = true;
+        socket.emit("changeadmin", res);
+      }
+    );
+  });
+  // VALDEMAR
   // Websocket for deleting existing rooms.
   // Only room admin is allowed to remove chatrooms.
   // UserInfo is sent.
@@ -389,6 +430,7 @@ io.sockets.on("connection", function (socket) {
     // Send back list of messages.
   });
 
+  // VALDEMAR
   // Websocket for leaving rooms.
   // UserInfo is sent.
   // Find the wished room.
