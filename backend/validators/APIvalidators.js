@@ -19,9 +19,21 @@ let validators = {
   createroom: {
     uid: "",
   },
+  removeroom: {
+    roomid: "",
+    uid: "",
+  },
+  leaveroom: {
+    uid: "",
+    roomid: "",
+  },
   joinroom: {
     uid: "",
     roomid: "",
+  },
+  changeadmin: {
+    roomid: "",
+    newadminid: "",
   },
 };
 module.exports = validators;

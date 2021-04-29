@@ -245,7 +245,7 @@ io.sockets.on("connection", function (socket) {
       });
   });
 
-  // VALDEMAR TESTED
+  // VALDEMAR NOT TESTED
   // Websocket for creating new Rooms
   socket.on("createroom", async (req) => {
     var res = {};
@@ -279,7 +279,7 @@ io.sockets.on("connection", function (socket) {
     var room = new RoomModel(rewroom);
 
     // Add the room to database.
-    room.save((err) => {
+    room.save(async (err) => {
       if (err) {
         res.success = false;
         res.err = err;
@@ -288,43 +288,141 @@ io.sockets.on("connection", function (socket) {
       }
 
       // Room is added to users list of rooms.
-      UserModel.findOneAndUpdate(
+      let updated = await UserModel.updateOne(
         { _id: req.uid },
         {
           $push: {
             rooms: newroom._id,
           },
-        },
-        (err) => {
-          if (err) {
-            res.success = false;
-            res.err = err;
-            socket.emit("createroom", res);
-            return;
-          }
-
-          res.success = true;
-          socket.emit("createroom", res);
         }
       );
+      if (!(updated.nModified > 0)) {
+        res.success = false;
+        res.err = err;
+        socket.emit("createroom", res);
+        return;
+      }
+
+      res.success = true;
+      socket.emit("createroom", res);
     });
   });
 
+  // VALDEMAR NOT TESTED
   // Websocket for changing admin.
   // Find room.
   // Criteria the new admin must be part of the room.
   // UserInfo for the new admin is sent.
   // User is found.
   // Room is found and update the admin to the new user.
+  socket.on("changeadmin", async (req) => {
+    res = {};
+    if (!validateInput(req, apiinput.changeadmin)) {
+      res.success = false;
+      res.err = "Invalid JSON Request";
+      socket.emit("changeadmin", res);
+      return;
+    }
+    // TODO: Fix error checking
+    // Get list of users in the requested room.
+    let users = await RoomModel.findOne({ _id: req.roomid })
+      .select("users")
+      .exec();
+    if (users === null) {
+      res.success = false;
+      res.err = "Invalid JSON Request";
+      socket.emit("changeadmin", res);
+      return;
+    }
+    // Check if the new admin is in the list of users.
+    if (!users.includes(req.newadminid)) {
+      res.success = false;
+      res.err = "The user is not a part of the chat.";
+      socket.emit("changeadmin", res);
+      return;
+    }
+    // Find the room and update the admin to the newadmin.
+    let updated = await RoomModel.updateOne(
+      { _id: req.roomid },
+      { admin: req.newadminid }
+    );
+    if (!(updated.nModified > 0)) {
+      res.success = false;
+      res.err = err;
+      socket.emit("changeadmin", res);
+      return;
+    }
 
+    res.success = true;
+    socket.emit("changeadmin", res);
+  });
+
+  // VALDEMAR NOT TESTED
   // Websocket for deleting existing rooms.
   // Only room admin is allowed to remove chatrooms.
   // UserInfo is sent.
   // User is found.
   // Compare user to registered admin.
+  // Remove all messages
   // if same, then remove room from each user in the room.
   // and then delete delete room.
   // else error.
+  socket.on("removeroom", async (req) => {
+    res = {};
+
+    if (!validateInput(req, apiinput.removeroom)) {
+      res.success = false;
+      res.err = "Invalid JSON Request";
+      socket.emit("removeroom", res);
+      return;
+    }
+
+    let room = await RoomModel.findOne({ _id: req.roomid }).exec();
+
+    if (!(room.admin === req.uid)) {
+      res.success = false;
+      res.err = "User isn't admin, therefore can't delete the chatroom.";
+      socket.emit("removeroom", res);
+      return;
+    }
+
+    // Remove all messages in the chatroom.
+    // TODO: Remember to delete the locally stored files.
+    let deleted = await MessageModel.deleteMany({
+      _id: { $in: room.messages },
+    });
+
+    if (!(deleted.deletedCount > 0)) {
+      res.success = false;
+      res.err = "Messages couldn't be deleted";
+      socket.emit("removeroom", res);
+      return;
+    }
+
+    // Remove the room object from the list user room, in each user.
+    let updated = await UserModel.updateMany(
+      { _id: { $in: room.users } },
+      { $pull: { rooms: { _id: room._id } } }
+    );
+    if (!(updated.nModified > 0)) {
+      res.success = false;
+      res.err = "Messages couldn't be deleted";
+      socket.emit("removeroom", res);
+      return;
+    }
+
+    // Delete the room itself.
+    await RoomModel.deleteOne({ _id: room._id }, (err) => {
+      if (err) {
+        res.success = false;
+        res.err = err;
+        socket.emit("removeroom", res);
+        return;
+      }
+      res.success = true;
+      socket.emit("removeroom", res);
+    });
+  });
 
   // VALDEMAR NOT TESTED
   // Websocket for joining rooms.
@@ -333,6 +431,7 @@ io.sockets.on("connection", function (socket) {
   // Add user to its list.
   // Send back list of messages.
   socket.on("joinroom", async (req) => {
+    res = {};
     // Get user and room ids.
     if (!validateInput(req, apiinput.joinroom)) {
       res.success = false;
@@ -342,19 +441,16 @@ io.sockets.on("connection", function (socket) {
     }
 
     // Add user to room list.
-    let room = await RoomModel.findOneAndUpdate(
+    let updated = await RoomModel.updateOne(
       { _id: req.roomid }, // Filter
       {
         // Update
         $push: {
           users: req.uid,
         },
-      }, // Options
-      {
-        new: true, // Returns the updated document.
       }
     );
-    if (room === null) {
+    if (!(updated.nModified > 0)) {
       res.success = false;
       res.err = "Room couldn't be identified";
       socket.emit("joinroom", res);
@@ -362,19 +458,16 @@ io.sockets.on("connection", function (socket) {
     }
 
     // Add room to user list.
-    let user = await UserModel.findOneAndUpdate(
+    updated = await UserModel.updateOne(
       { _id: req.uid }, // Filter
       {
         // Update
         $push: {
           rooms: req.roomid,
         },
-      }, // Options
-      {
-        new: true, // Returns the updated document.
       }
     );
-    if (user === null) {
+    if (!(updated.nModified > 0)) {
       res.success = false;
       res.err = "User couldn't be identified";
       socket.emit("joinroom", res);
@@ -389,10 +482,48 @@ io.sockets.on("connection", function (socket) {
     // Send back list of messages.
   });
 
+  // VALDEMAR NOT TESTED
   // Websocket for leaving rooms.
   // UserInfo is sent.
   // Find the wished room.
   // remove user from room.
+  // remove the room from the user.
+  socket.on("leaveroom", async (req) => {
+    var res = {};
+    if (!validateInput(req, apiinput.leaveroom)) {
+      res.success = false;
+      res.err = "Invalid JSON Request";
+      socket.emit("leaveroom", res);
+      return;
+    }
+
+    // Remove user from the room.
+    let updated = await RoomModel.updateOne(
+      { _id: req.roomid },
+      { $pull: { users: { _id: req.uid } } }
+    );
+    if (!(updated.nModified > 0)) {
+      res.success = false;
+      res.err = "User couldn't be removed from the room";
+      socket.emit("leaveroom", res);
+      return;
+    }
+
+    // Remove room from the user.
+    updated = await UserModel.updateOne(
+      { _id: req.uid },
+      { $pull: { rooms: { _id: req.roomid } } }
+    );
+    if (!(updated.nModified > 0)) {
+      res.success = false;
+      res.err = "Room couldn't be removed from the user";
+      socket.emit("leaveroom", res);
+      return;
+    }
+
+    res.success = true;
+    socket.emit("leaveroom", res);
+  });
 
   // Websocket for handling messages.
   // UserInfo, RoomInfo and message is sent.
@@ -478,3 +609,17 @@ io.sockets.on("connection", function (socket) {
 http.listen(PORT, function () {
   console.log("server started");
 });
+
+/* NICE MONGOOSE REFERENCES
+  Working with array of objects.
+  https://tech-blog.maddyzone.com/node.js/add-update-delete-object-array-schema-mongoosemongodb
+
+  Basic CRUD in Mongoose.
+  https://coursework.vschool.io/mongoose-crud/
+
+  Mongoose delete.
+  https://kb.objectrocket.com/mongo-db/mongoose-delete-817
+
+  Mongoose docs.
+  https://mongoosejs.com/docs/api.html
+  */
