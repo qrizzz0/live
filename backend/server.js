@@ -73,22 +73,37 @@ io.sockets.on("connection", function (socket) {
     }
   });
   /* Server side login functionality.
+  expected req.
+    {
+      email,
+      hashed_password
+    }
 		Wants mail and hashed_password.
 		Returns err on failure
 		Returns user object on success*/
   socket.on("login", async function (req) {
+    // Check request for proper format.
+    
     var res = {};
     // get user information; mail and hashed password
     var user = req;
 
     // Authenticate mail and password;
-    var doc = await UserModel.findOne({ email: user.email }).exec(
+    UserModel.findOne({ email: user.email }).exec(
       (err, doc) => {
         if (err) {
           // Emit true if authenticated.
-          res.success = true;
-          res.user = docs;
+          res.success = false;
+          res.err = err;
           socket.emit("login", res);
+          return;
+        }
+        if (doc === null){
+          // no user found
+          res.success = false;
+          res.err = "No user is found";
+          socket.emit("login", res);
+          return;
         }
         // Select password from user. Match the stored password with the given.
         if (doc.hashed_password === user.password) {
@@ -107,7 +122,16 @@ io.sockets.on("connection", function (socket) {
       }
     );
   });
-
+   /* Server side signup functionality.
+  expected req.
+    {
+      email,
+      username,
+      hashed_password,
+    }
+		Wants mail and hashed_password.
+		Returns err on failure
+		Returns user object on success*/
   socket.on("signup", async (req) => {
     var res = {};
     // Get signup information about the new user.
