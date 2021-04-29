@@ -83,6 +83,8 @@ io.sockets.on("connection", function (socket) {
       delete clientInfo[socket.id];
     }
   });
+
+  // VALDEMAR
   /* Server side login functionality.
   expected req.
     {
@@ -140,6 +142,7 @@ io.sockets.on("connection", function (socket) {
     );
   });
 
+  // VALDEMAR
    /* Server side signup functionality.
   expected req.
     {
@@ -214,9 +217,8 @@ io.sockets.on("connection", function (socket) {
 	// Websocket for removing friends.
 	// And Theis will take this
 
-
+  // VALDEMAR
 	// Websocket for getting user info.
-	//Theis will try to refactor this
   socket.on("getuserinfo", (req) => {
     
     // UserID is sent.
@@ -245,20 +247,66 @@ UserModel.findOne({ _id: req.uid }).select(basicUserInfo).exec((err, doc) => {
   });
 
   
-// MARKUS MARKUS MARKUS MARKUS MARKUS MARKUS MARKUS
+  // VALDEMAR
   // Websocket for creating new Rooms
-  // UserId creating room is sent
-  // New room is created in database.
-  // UserÌD is added to room.
-  // UserID is added as admin.
   socket.on("createroom", async (req) => {
-    var roomID = req.roomID;
-    var userID = req.userID;
+    var res = {};
+    
+  // UserId creating room is sent
+    if(!validateInput(req, apiinput.createroom)){
+      res.success = false;
+      res.err = "Invalid JSON Request";
+      socket.emit("createroom", res);
+      return;
+};
+// Check if the user trying to create room exists.
+var doc = await UserModel.exists({ _id: req.uid });
+if (!doc) {
+  //false if it doesn't exist.
+  res.success = false;
+  res.err = "User couldn't be identified";
+  socket.emit("createroom", res);
+  return;
+}
 
-    //https://mongoosejs.com/docs/models.html
-    RoomModel.create({ admin: userID });
+  // New room is created in database.
+var newroom = {};
+newroom._id = new mongoose.Types.ObjectId();
 
+  // UserID is added as admin.
+newroom.admin = req.uid;
+
+  // UserÌD is added to room.
+newroom.users = [req.uid];
+var room = new RoomModel(rewroom);
+
+// Add the room to database.
+room.save((err) => {
+  if (err) {
+    res.success = false;
+    res.err = err;
     socket.emit("createroom", res);
+    return;
+  }
+  
+  // Room is added to users list of rooms.
+  UserModel.findOneAndUpdate({_id: req.uid}, {
+    $push : {
+      rooms : newroom._id,
+    }
+}, (err)=>{
+  if(err) {
+    res.success = false;
+    res.err = err;
+    socket.emit("createroom", res);
+    return;
+  }
+  
+  res.success = true;
+  socket.emit("createroom", res);
+})
+})
+
   });
 
   // Websocket for changing admin.
@@ -267,6 +315,7 @@ UserModel.findOne({ _id: req.uid }).select(basicUserInfo).exec((err, doc) => {
   // UserInfo for the new admin is sent.
   // User is found.
   // Room is found and update the admin to the new user.
+
 
   // Websocket for deleting existing rooms.
   // Only room admin is allowed to remove chatrooms.
@@ -277,11 +326,45 @@ UserModel.findOne({ _id: req.uid }).select(basicUserInfo).exec((err, doc) => {
   // and then delete delete room.
   // else error.
 
+  // VALDEMAR
   // Websocket for joining rooms.
   // UserInfo is sent.
   // Find the linked room.
   // Add user to its list.
   // Send back list of messages.
+  socket.on("joinroom", async (req) => {
+    // Get user and room ids.
+    if(!validateInput(req, apiinput.joinroom)){
+      res.success = false;
+      res.err = "Invalid JSON Request";
+      socket.emit("joinroom", res);
+      return;
+};
+
+  // Find the linked room.
+  let room = await RoomModel.findOne({_id: req.roomid}).exec();
+  if (room === null) {
+    res.success = false;
+    res.err = "Room couldn't be identified";
+    socket.emit("joinroom", res);
+    return;
+  }
+  // Find the linked user.
+  let user = await UserModel.findOne({_id: req.uid}).exec();
+  if (user === null) {
+    res.success = false;
+    res.err = "User couldn't be identified";
+    socket.emit("joinroom", res);
+    return;
+  }
+  console.log(user);
+  console.log(room);
+  // Add user to room list.
+  // Add room to user list.
+
+  // Send back list of messages.
+
+  })
 
   // Websocket for leaving rooms.
   // UserInfo is sent.

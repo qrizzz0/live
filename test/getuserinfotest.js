@@ -13,16 +13,16 @@ socket.on("getuserinfo", (res)=>{
     console.log(res);
 })
 
-let validuser = {
-    uid: '608abe5a930fb164d3c54aca'
+let validuser = { // Success true
+    uid: '608abe5a930fb164d3c54aca' // Valid on my test case.
 }
 
-let invaliduser = {
-    uid: "marshall@matters.com"
+let invaliduser = { // Success false.
+    uid: "marshall@matters.com" // Completely invalid objectid.
 }
 
-let notuser = {
-    date: "19/12/2020",
+let notuser = { // Success false.
+    date: "19/12/2020", // What even is this???
     age: 21,
     essential: true,
 }

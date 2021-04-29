@@ -13,25 +13,25 @@ function sleep(ms) {
       console.log(res);
   })
   
-let validuser = {
+let validuser = { // Success true; only the first time ;)
     email: "pingvin@linux.com",
     username: "Bubber",
     hashed_password: "Bubber",
 }
 
-let alreadyuser = {
+let alreadyuser = { // Success false; Username is already used.
     email: "pingvin@lagger.com",
     username: "Bubber",
     hashed_password: "Bubber",
 }
 
-let invaliduser = {
+let invaliduser = { // Success false; Invalid mail format. Also should check username.
     email: "pingvin@localhost",
     username: "",
     hashed_password: "UMOM",
 }
 
-let notuser = {
+let notuser = { // Success false; Invalid JSON. Should never be valid.
     date: "19/12/2020",
     age: 21,
     essential: true,
