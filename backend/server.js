@@ -3,7 +3,7 @@ var WebSocketUploader = require("./WebSocketUploader/WebSocketUploader.js");
 
 var mongoose = require("mongoose");
 
-var _ = require('lodash');
+var _ = require("lodash");
 
 const apiinput = require("./validators/APIvalidators");
 
@@ -55,7 +55,7 @@ function validateMail(mail) {
 }
 
 // Maybe move into API validator.
-function validateInput(input, expected){
+function validateInput(input, expected) {
   var inputKeys = Object.keys(input);
   var expectedKeys = Object.keys(expected);
   return _.isEqual(inputKeys, expectedKeys);
@@ -97,53 +97,51 @@ io.sockets.on("connection", function (socket) {
   socket.on("login", function (req) {
     var res = {};
 
-    if(!validateInput(req, apiinput.login)){
-          res.success = false;
-          res.err = "Invalid JSON Request";
-          socket.emit("login", res);
-          return;
-    };
+    if (!validateInput(req, apiinput.login)) {
+      res.success = false;
+      res.err = "Invalid JSON Request";
+      socket.emit("login", res);
+      return;
+    }
 
     // get user information; mail and hashed password
     var user = req;
 
     // Authenticate mail and password;
-    UserModel.findOne({ email: user.email }).exec(
-      (err, doc) => {
-        if (err) {
-          // Emit true if authenticated.
-          res.success = false;
-          res.err = err;
-          socket.emit("login", res);
-          return;
-        }
-        if (doc === null){
-          // no user found
-          res.success = false;
-          res.err = "No user is found";
-          socket.emit("login", res);
-          return;
-        }
-        // Select password from user. Match the stored password with the given.
-        if (doc.hashed_password === user.hashed_password) {
-          // Emit true if authenticated.
-          res.success = true;
-          res.user = doc;
-          socket.emit("login", res);
-        } else {
-          // Emit false if not authenticated.
-          // Wrong password
-          res.success = false;
-          res.err = "Wrong password!";
-          socket.emit("login", res);
-          return;
-        }
+    UserModel.findOne({ email: user.email }).exec((err, doc) => {
+      if (err) {
+        // Emit true if authenticated.
+        res.success = false;
+        res.err = err;
+        socket.emit("login", res);
+        return;
       }
-    );
+      if (doc === null) {
+        // no user found
+        res.success = false;
+        res.err = "No user is found";
+        socket.emit("login", res);
+        return;
+      }
+      // Select password from user. Match the stored password with the given.
+      if (doc.hashed_password === user.hashed_password) {
+        // Emit true if authenticated.
+        res.success = true;
+        res.user = doc;
+        socket.emit("login", res);
+      } else {
+        // Emit false if not authenticated.
+        // Wrong password
+        res.success = false;
+        res.err = "Wrong password!";
+        socket.emit("login", res);
+        return;
+      }
+    });
   });
 
   // VALDEMAR
-   /* Server side signup functionality.
+  /* Server side signup functionality.
   expected req.
     {
       email,
@@ -156,15 +154,15 @@ io.sockets.on("connection", function (socket) {
   socket.on("signup", async (req) => {
     var res = {};
     // Get signup information about the new user.
-    if(!validateInput(req, apiinput.signup)){
+    if (!validateInput(req, apiinput.signup)) {
       res.success = false;
       res.err = "Invalid JSON Request";
       socket.emit("signup", res);
       return;
-};
+    }
     var newuser = req;
     newuser._id = new mongoose.Types.ObjectId();
-    
+
     // Validate mailstring
     if (!validateMail(newuser.email)) {
       res.success = false;
@@ -212,101 +210,104 @@ io.sockets.on("connection", function (socket) {
       etc: "et eller andet who knows",
     });
   });
-	// Websocket for adding friends.
-    // Theis will take this
-	// Websocket for removing friends.
-	// And Theis will take this
+  // Websocket for adding friends.
+  // Theis will take this
+  // Websocket for removing friends.
+  // And Theis will take this
 
   // VALDEMAR
-	// Websocket for getting user info.
+  // Websocket for getting user info.
   socket.on("getuserinfo", (req) => {
-    
     // UserID is sent.
     var res = {};
- // Get userID information about the new user.
- if(!validateInput(req, apiinput.getuserinfo)){
-  res.success = false;
-  res.err = "Invalid JSON Request";
-  socket.emit("getuserinfo", res);
-  return;
-};
-// Find user and sort out only basic info.
-UserModel.findOne({ _id: req.uid }).select(basicUserInfo).exec((err, doc) => {
-  if (err) {
-    res.success = false;
-    res.err = err;
-    socket.emit("getuserinfo", res);
-    return;
-  }
+    // Get userID information about the new user.
+    if (!validateInput(req, apiinput.getuserinfo)) {
+      res.success = false;
+      res.err = "Invalid JSON Request";
+      socket.emit("getuserinfo", res);
+      return;
+    }
+    // Find user and sort out only basic info.
+    UserModel.findOne({ _id: req.uid })
+      .select(basicUserInfo)
+      .exec((err, doc) => {
+        if (err) {
+          res.success = false;
+          res.err = err;
+          socket.emit("getuserinfo", res);
+          return;
+        }
 
-  // Send back userinfo.
-  res.success = true;
-  res.user = doc;
-  socket.emit("getuserinfo", res);
-});
+        // Send back userinfo.
+        res.success = true;
+        res.user = doc;
+        socket.emit("getuserinfo", res);
+      });
   });
 
-  
   // VALDEMAR
   // Websocket for creating new Rooms
   socket.on("createroom", async (req) => {
     var res = {};
-    
-  // UserId creating room is sent
-    if(!validateInput(req, apiinput.createroom)){
+
+    // UserId creating room is sent
+    if (!validateInput(req, apiinput.createroom)) {
       res.success = false;
       res.err = "Invalid JSON Request";
       socket.emit("createroom", res);
       return;
-};
-// Check if the user trying to create room exists.
-var doc = await UserModel.exists({ _id: req.uid });
-if (!doc) {
-  //false if it doesn't exist.
-  res.success = false;
-  res.err = "User couldn't be identified";
-  socket.emit("createroom", res);
-  return;
-}
-
-  // New room is created in database.
-var newroom = {};
-newroom._id = new mongoose.Types.ObjectId();
-
-  // UserID is added as admin.
-newroom.admin = req.uid;
-
-  // UserÌD is added to room.
-newroom.users = [req.uid];
-var room = new RoomModel(rewroom);
-
-// Add the room to database.
-room.save((err) => {
-  if (err) {
-    res.success = false;
-    res.err = err;
-    socket.emit("createroom", res);
-    return;
-  }
-  
-  // Room is added to users list of rooms.
-  UserModel.findOneAndUpdate({_id: req.uid}, {
-    $push : {
-      rooms : newroom._id,
     }
-}, (err)=>{
-  if(err) {
-    res.success = false;
-    res.err = err;
-    socket.emit("createroom", res);
-    return;
-  }
-  
-  res.success = true;
-  socket.emit("createroom", res);
-})
-})
+    // Check if the user trying to create room exists.
+    var doc = await UserModel.exists({ _id: req.uid });
+    if (!doc) {
+      //false if it doesn't exist.
+      res.success = false;
+      res.err = "User couldn't be identified";
+      socket.emit("createroom", res);
+      return;
+    }
 
+    // New room is created in database.
+    var newroom = {};
+    newroom._id = new mongoose.Types.ObjectId();
+
+    // UserID is added as admin.
+    newroom.admin = req.uid;
+
+    // UserÌD is added to room.
+    newroom.users = [req.uid];
+    var room = new RoomModel(rewroom);
+
+    // Add the room to database.
+    room.save((err) => {
+      if (err) {
+        res.success = false;
+        res.err = err;
+        socket.emit("createroom", res);
+        return;
+      }
+
+      // Room is added to users list of rooms.
+      UserModel.findOneAndUpdate(
+        { _id: req.uid },
+        {
+          $push: {
+            rooms: newroom._id,
+          },
+        },
+        (err) => {
+          if (err) {
+            res.success = false;
+            res.err = err;
+            socket.emit("createroom", res);
+            return;
+          }
+
+          res.success = true;
+          socket.emit("createroom", res);
+        }
+      );
+    });
   });
 
   // Websocket for changing admin.
@@ -315,7 +316,6 @@ room.save((err) => {
   // UserInfo for the new admin is sent.
   // User is found.
   // Room is found and update the admin to the new user.
-
 
   // Websocket for deleting existing rooms.
   // Only room admin is allowed to remove chatrooms.
@@ -334,37 +334,36 @@ room.save((err) => {
   // Send back list of messages.
   socket.on("joinroom", async (req) => {
     // Get user and room ids.
-    if(!validateInput(req, apiinput.joinroom)){
+    if (!validateInput(req, apiinput.joinroom)) {
       res.success = false;
       res.err = "Invalid JSON Request";
       socket.emit("joinroom", res);
       return;
-};
+    }
 
-  // Find the linked room.
-  let room = await RoomModel.findOne({_id: req.roomid}).exec();
-  if (room === null) {
-    res.success = false;
-    res.err = "Room couldn't be identified";
-    socket.emit("joinroom", res);
-    return;
-  }
-  // Find the linked user.
-  let user = await UserModel.findOne({_id: req.uid}).exec();
-  if (user === null) {
-    res.success = false;
-    res.err = "User couldn't be identified";
-    socket.emit("joinroom", res);
-    return;
-  }
-  console.log(user);
-  console.log(room);
-  // Add user to room list.
-  // Add room to user list.
+    // Find the linked room.
+    let room = await RoomModel.findOne({ _id: req.roomid }).exec();
+    if (room === null) {
+      res.success = false;
+      res.err = "Room couldn't be identified";
+      socket.emit("joinroom", res);
+      return;
+    }
+    // Find the linked user.
+    let user = await UserModel.findOne({ _id: req.uid }).exec();
+    if (user === null) {
+      res.success = false;
+      res.err = "User couldn't be identified";
+      socket.emit("joinroom", res);
+      return;
+    }
+    console.log(user);
+    console.log(room);
+    // Add user to room list.
+    // Add room to user list.
 
-  // Send back list of messages.
-
-  })
+    // Send back list of messages.
+  });
 
   // Websocket for leaving rooms.
   // UserInfo is sent.
