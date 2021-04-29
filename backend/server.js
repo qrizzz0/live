@@ -245,7 +245,7 @@ io.sockets.on("connection", function (socket) {
       });
   });
 
-  // VALDEMAR TESTED
+  // VALDEMAR NOT TESTED
   // Websocket for creating new Rooms
   socket.on("createroom", async (req) => {
     var res = {};
@@ -317,9 +317,9 @@ io.sockets.on("connection", function (socket) {
   // UserInfo for the new admin is sent.
   // User is found.
   // Room is found and update the admin to the new user.
-  socket.on("changeadmin", (req) => {
+  socket.on("changeadmin", async (req) => {
     res = {};
-    if (!validateInput(req, apiinput.joinroom)) {
+    if (!validateInput(req, apiinput.changeadmin)) {
       res.success = false;
       res.err = "Invalid JSON Request";
       socket.emit("changeadmin", res);
@@ -327,7 +327,9 @@ io.sockets.on("connection", function (socket) {
     }
 
     // Get list of users in the requested room.
-    let users = RoomModel.findOne({ _id: req.roomid }).select("users").exec();
+    let users = await RoomModel.findOne({ _id: req.roomid })
+      .select("users")
+      .exec();
     if (users === null) {
       res.success = false;
       res.err = "Invalid JSON Request";
@@ -357,15 +359,74 @@ io.sockets.on("connection", function (socket) {
       }
     );
   });
-  // VALDEMAR
+
+  // VALDEMAR NOT TESTED
   // Websocket for deleting existing rooms.
   // Only room admin is allowed to remove chatrooms.
   // UserInfo is sent.
   // User is found.
   // Compare user to registered admin.
+  // Remove all messages
   // if same, then remove room from each user in the room.
   // and then delete delete room.
   // else error.
+  socket.on("removeroom", async (req) => {
+    res = {};
+
+    if (!validateInput(req, apiinput.removeroom)) {
+      res.success = false;
+      res.err = "Invalid JSON Request";
+      socket.emit("removeroom", res);
+      return;
+    }
+
+    let room = await RoomModel.findOne({ _id: req.roomid }).exec();
+
+    if (!(room.admin === req.uid)) {
+      res.success = false;
+      res.err = "User isn't admin, therefore can't delete the chatroom.";
+      socket.emit("removeroom", res);
+      return;
+    }
+
+    // Remove all messages in the chatroom.
+    // TODO: Remember to delete the locally stored files.
+    let deleted = await MessageModel.deleteMany({
+      _id: { $in: room.messages },
+    }).exec();
+    console.log(deleted);
+    if (!deleted) {
+      res.success = false;
+      res.err = "Messages couldn't be deleted";
+      socket.emit("removeroom", res);
+      return;
+    }
+
+    // Remove the room object from the list user room, in each user.
+    let updated = await UserModel.updateMany(
+      { _id: { $in: room.users } },
+      { $pull: { rooms: { _id: room._id } } }
+    ).exec();
+    console.log(updated);
+    if (!updated) {
+      res.success = false;
+      res.err = "Messages couldn't be deleted";
+      socket.emit("removeroom", res);
+      return;
+    }
+
+    // Delete the room itself.
+    await RoomModel.deleteOne({ _id: room._id }, (err) => {
+      if (err) {
+        res.success = false;
+        res.err = err;
+        socket.emit("removeroom", res);
+        return;
+      }
+      res.success = true;
+      socket.emit("removeroom", res);
+    });
+  });
 
   // VALDEMAR NOT TESTED
   // Websocket for joining rooms.
@@ -374,6 +435,7 @@ io.sockets.on("connection", function (socket) {
   // Add user to its list.
   // Send back list of messages.
   socket.on("joinroom", async (req) => {
+    res = {};
     // Get user and room ids.
     if (!validateInput(req, apiinput.joinroom)) {
       res.success = false;
@@ -435,6 +497,9 @@ io.sockets.on("connection", function (socket) {
   // UserInfo is sent.
   // Find the wished room.
   // remove user from room.
+  socket.on("leaveroom", async (req) => {
+    var res = {};
+  });
 
   // Websocket for handling messages.
   // UserInfo, RoomInfo and message is sent.
@@ -520,3 +585,17 @@ io.sockets.on("connection", function (socket) {
 http.listen(PORT, function () {
   console.log("server started");
 });
+
+/* NICE MONGOOSE REFERENCES
+  Working with array of objects.
+  https://tech-blog.maddyzone.com/node.js/add-update-delete-object-array-schema-mongoosemongodb
+
+  Basic CRUD in Mongoose.
+  https://coursework.vschool.io/mongoose-crud/
+
+  Mongoose delete.
+  https://kb.objectrocket.com/mongo-db/mongoose-delete-817
+
+  Mongoose docs.
+  https://mongoosejs.com/docs/api.html
+  */

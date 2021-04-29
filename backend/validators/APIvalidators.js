@@ -19,12 +19,16 @@ let validators = {
   createroom: {
     uid: "",
   },
+  removeroom: {
+    roomid: "",
+    uid: "",
+  },
+  leaveroom: {},
   joinroom: {
     uid: "",
     roomid: "",
   },
   changeadmin: {
-    uid: "",
     roomid: "",
     newadminid: "",
   },
