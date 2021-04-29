@@ -84,7 +84,7 @@ io.sockets.on("connection", function (socket) {
     }
   });
 
-  // VALDEMAR
+  // VALDEMAR TESTED
   /* Server side login functionality.
   expected req.
     {
@@ -140,7 +140,7 @@ io.sockets.on("connection", function (socket) {
     });
   });
 
-  // VALDEMAR
+  // VALDEMAR TESTED
   /* Server side signup functionality.
   expected req.
     {
@@ -215,7 +215,7 @@ io.sockets.on("connection", function (socket) {
   // Websocket for removing friends.
   // And Theis will take this
 
-  // VALDEMAR
+  // VALDEMAR TESTED
   // Websocket for getting user info.
   socket.on("getuserinfo", (req) => {
     // UserID is sent.
@@ -245,7 +245,7 @@ io.sockets.on("connection", function (socket) {
       });
   });
 
-  // VALDEMAR
+  // VALDEMAR TESTED
   // Websocket for creating new Rooms
   socket.on("createroom", async (req) => {
     var res = {};
@@ -326,7 +326,7 @@ io.sockets.on("connection", function (socket) {
   // and then delete delete room.
   // else error.
 
-  // VALDEMAR
+  // VALDEMAR NOT TESTED
   // Websocket for joining rooms.
   // UserInfo is sent.
   // Find the linked room.
@@ -341,16 +341,39 @@ io.sockets.on("connection", function (socket) {
       return;
     }
 
-    // Find the linked room.
-    let room = await RoomModel.findOne({ _id: req.roomid }).exec();
+    // Add user to room list.
+    let room = await RoomModel.findOneAndUpdate(
+      { _id: req.roomid }, // Filter
+      {
+        // Update
+        $push: {
+          users: req.uid,
+        },
+      }, // Options
+      {
+        new: true, // Returns the updated document.
+      }
+    );
     if (room === null) {
       res.success = false;
       res.err = "Room couldn't be identified";
       socket.emit("joinroom", res);
       return;
     }
-    // Find the linked user.
-    let user = await UserModel.findOne({ _id: req.uid }).exec();
+
+    // Add room to user list.
+    let user = await UserModel.findOneAndUpdate(
+      { _id: req.uid }, // Filter
+      {
+        // Update
+        $push: {
+          rooms: req.roomid,
+        },
+      }, // Options
+      {
+        new: true, // Returns the updated document.
+      }
+    );
     if (user === null) {
       res.success = false;
       res.err = "User couldn't be identified";
@@ -359,9 +382,10 @@ io.sockets.on("connection", function (socket) {
     }
     console.log(user);
     console.log(room);
-    // Add user to room list.
-    // Add room to user list.
 
+    res.success = true;
+    res.messages = room.messages;
+    socket.emit("joinroom", res);
     // Send back list of messages.
   });
 
