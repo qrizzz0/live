@@ -1,4 +1,4 @@
-var socket = io.connect("http://130.225.170.76:3000");
+var socket = io.connect("https://websocket.sovsehytten.tk");
 // listen for server connection
 // get query params from url
 var room = getQueryVariable("room") || "No Room Selected";
