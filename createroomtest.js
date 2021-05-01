@@ -9,14 +9,13 @@ function sleep(ms) {
 socket.on("connect", () => {
   test();
 });
-socket.on("login", (res) => {
+socket.on("createroom", (res) => {
   console.log(res);
 });
 
-let validuser = {
+let validroom = {
   // Success true; Valid in test environment.
-  email: "pingvin@linux.com",
-  hashed_password: "Bubber",
+  uid: "608d3ec173828f9ca07ca655",
 };
 
 let invaliduser = {
@@ -34,11 +33,11 @@ let notuser = {
 
 async function test() {
   await sleep(1000);
-  socket.emit("login", validuser);
+  socket.emit("createroom", validuser);
   await sleep(1000);
-  socket.emit("login", invaliduser);
+  socket.emit("createroom", invaliduser);
   await sleep(1000);
-  socket.emit("login", notuser);
+  socket.emit("createroom", notuser);
   await sleep(1000);
   socket.disconnect();
 }

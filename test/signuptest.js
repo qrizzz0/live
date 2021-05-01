@@ -1,6 +1,6 @@
 const io = require("socket.io-client");
 
-var socket = io.connect("http://172.26.127.94:3000");
+var socket = io.connect("http://172.23.96.245:3000");
 function sleep(ms) {
   return new Promise((resolve) => {
     setTimeout(resolve, ms);
@@ -11,6 +11,8 @@ socket.on("connect", () => {
 });
 socket.on("signup", (res) => {
   console.log(res);
+  if (res.success) {
+  }
 });
 
 let validuser = {

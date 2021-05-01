@@ -108,7 +108,7 @@ io.sockets.on("connection", function (socket) {
     var user = req;
 
     // Authenticate mail and password;
-    UserModel.findOne({ email: user.email }).exec((err, doc) => {
+    UserModel.findOne({ email: user.email }, (err, doc) => {
       if (err) {
         // Emit true if authenticated.
         res.success = false;
@@ -274,6 +274,8 @@ io.sockets.on("connection", function (socket) {
     // UserID is added as admin.
     newroom.admin = req.uid;
 
+    newroom.name = req.name;
+
     // UserÌD is added to room.
     newroom.users = [req.uid];
     var room = new RoomModel(rewroom);
@@ -305,6 +307,62 @@ io.sockets.on("connection", function (socket) {
 
       res.success = true;
       socket.emit("createroom", res);
+    });
+  });
+
+  // Websocket for getting all rooms.
+  socket.on("getallrooms", (req) => {
+    var res = {};
+
+    // UserId creating room is sent
+    if (!validateInput(req, apiinput.getallrooms)) {
+      res.success = false;
+      res.err = "Invalid JSON Request";
+      socket.emit("getallrooms", res);
+      return;
+    }
+
+    RoomModel.find().exec((err, docs) => {
+      if (err) {
+        res.success = false;
+        res.err = err;
+        socket.emit("getallrooms", res);
+        return;
+      }
+      res.success = true;
+      res.rooms = docs;
+      socket.emit("getallrooms", res);
+      return;
+    });
+  });
+
+  // Websocket for finding rooms.
+  // Get name of room.
+  // lookup room.
+  // return matching room.
+  // else return
+  socket.on("findroom", (req) => {
+    var res = {};
+
+    // UserId creating room is sent
+    if (!validateInput(req, apiinput.createroom)) {
+      res.success = false;
+      res.err = "Invalid JSON Request";
+      socket.emit("createroom", res);
+      return;
+    }
+
+    RoomModel.findOne({ name: req.name }, (err, doc) => {
+      if (err) {
+        res.success = false;
+        res.err = err;
+        socket.emit("createroom", res);
+        return;
+      }
+      res.success = true;
+      res.room = doc;
+      socket.emit("createroom", res);
+      return;
     });
   });
 
