@@ -27,11 +27,16 @@
               <a class="btn btn-primary" onclick="redirectToLogin()">
                 <i class="bi bi-box-arrow-left"></i>
                 Go Back
-              </a>
+              </a> <br>
+
               <div class="form-group">
-                <label for="room">Choose Room:</label>
+                <label for="room">Search Room:</label>
+                <div class="search-rooms">
+                  <input class="form-control" id="name" name="name" placeholder="" type="text" required> <br>
+                </div>
+
                 <div class="list-group">
-                  <select class="col-md-2" name="room" size="8">
+                  <select class="col-md-2" id="rooms" name="room" size="8">
                     <option class="options bi bi-door-open-fill" value="Room 1"> Room 1 </option>  
                     <option class="options bi bi-door-open-fill" value="Room 2"> Room 2 </option>  
                     <option class="options bi bi-door-open-fill" value="Room 3"> Room 3 </option>  

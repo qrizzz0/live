@@ -17,7 +17,6 @@ db.once("open", function () {});
 
 /* Get Mongoose models for database work */
 var UserModel = require("./models/user");
-var FileModel = require("./models/file");
 var RoomModel = require("./models/room");
 var MessageModel = require("./models/message");
 
@@ -39,7 +38,7 @@ const roomHandler = new RoomHandler(clientInfo, messageHandler);
 //socket io module
 var io = require("socket.io")(http, {
   cors: {
-    origin: "http://130.225.170.76",
+    origin: "*", //Maybe change this to single domain for security at some point.
     methods: ["GET", "POST"],
   },
 });
@@ -63,7 +62,7 @@ function validateInput(input, expected) {
 
 // io.on listens for events
 io.sockets.on("connection", function (socket) {
-  new WebSocketUploader(socket); //Kris will connect this to datasbase
+  new WebSocketUploader(socket, messageHandler); //Kris will connect this to datasbase
 
   //for disconnection
   socket.on("disconnect", function () {
@@ -231,7 +230,7 @@ io.sockets.on("connection", function (socket) {
     UserModel.findOne({ _id: req.uid })
       .select(basicUserInfo)
       .exec((err, doc) => {
-        if (err) {
+        if (err) {  
           res.success = false;
           res.err = err;
           socket.emit("getuserinfo", res);
@@ -278,7 +277,7 @@ io.sockets.on("connection", function (socket) {
 
     // UserÌD is added to room.
     newroom.users = [req.uid];
-    var room = new RoomModel(rewroom);
+    var room = new RoomModel(newroom);
 
     // Add the room to database.
     room.save(async (err) => {
@@ -623,7 +622,7 @@ io.sockets.on("connection", function (socket) {
     if (room.err == null && message.err == null) {
       if (req.userID == room.admin || req.userID == message.sender) {
         if (message.file.exists()) {
-          // Slet fil
+          // Slet fil SKAL LAVES !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
           console.log("File:" + message.file + " deleted");
         }
 
@@ -650,7 +649,7 @@ io.sockets.on("connection", function (socket) {
   });
 
   // Room welcome message
-  messageHandler.message(socket, "Welcome to Chat Application !");
+  messageHandler.message(socket, "System", "Welcome to Chat Application !");
 
   // listen for client typing messages
   socket.on("typing", function (message) {
