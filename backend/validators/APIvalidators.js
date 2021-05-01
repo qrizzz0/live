@@ -18,6 +18,11 @@ let validators = {
   },
   createroom: {
     uid: "",
+    name: "",
+  },
+  getallrooms: {},
+  findroom: {
+    name: "",
   },
   removeroom: {
     roomid: "",
