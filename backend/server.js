@@ -17,7 +17,6 @@ db.once("open", function () {});
 
 /* Get Mongoose models for database work */
 var UserModel = require("./models/user");
-var FileModel = require("./models/file");
 var RoomModel = require("./models/room");
 var MessageModel = require("./models/message");
 
@@ -276,7 +275,7 @@ io.sockets.on("connection", function (socket) {
 
     // UserÌD is added to room.
     newroom.users = [req.uid];
-    var room = new RoomModel(rewroom);
+    var room = new RoomModel(newroom);
 
     // Add the room to database.
     room.save(async (err) => {

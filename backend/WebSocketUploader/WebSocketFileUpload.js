@@ -3,7 +3,10 @@ const fs = require('fs');
 const CryptoJS = require('crypto-js');
 
 class WebSocketFileUpload {
+    FileModel = require("./models/file");
     data = [];
+    saveLocation = "/home/cloud/live/frontend/data/";
+
 
     constructor(socket, fileInput) {
         this.name = fileInput.name;
@@ -38,15 +41,43 @@ class WebSocketFileUpload {
             this.requestNextSlice();
         } else {
             console.log("Upload should be done if you see this. Saving file");
+
+            /*var newFile = {};
+            newFile._id = new mongoose.Types.ObjectId();
+            newFile.fileid = this.id;
+            newFile.name = this.name;
+            newFile.path: this.fileid;
+            newFile.fileSize: Number;
+            newFile.fileType: String;*/
+
             this.saveFile()
+            this.saveToDatabase();
         }
     }
 
     saveFile() {
-        var filePath = '/home/cloud/live/frontend/data/' + this.name;
+        this.filePath = saveLocation + this.name;
 
         var writeStream = fs.createWriteStream(filePath);
         this.data.forEach(value => writeStream.write(value));
+    }
+
+    saveToDatabase() {
+        var file = new FileModel(newFile);
+        newFile._id = new mongoose.Types.ObjectId();
+        newFile.fileid = this.id;
+        newFile.name = this.name;
+        newFile.path = this.filePath;
+        newFile.fileSize = size;
+        newFile.fileType = "exe";
+        file.save(async (err) => {
+          if (err) {
+            res.success = false;
+            res.err = err;
+            socket.emit("createroom", res);
+            return;
+          }
+        });
     }
 
     FileSaveCallback = (err) => {
