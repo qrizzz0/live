@@ -5,10 +5,10 @@ class MessageHandler {
 		this.clientInfo = clientInfo;
 	}
 
-	message(socket, text) {
+	message(socket, name, text) {
 		socket.emit("message", {
 			text: text,
-			name: "System",
+			name: name,
 			timestamp: moment().valueOf(),
 		});
 	}
@@ -17,12 +17,19 @@ class MessageHandler {
 		socket.broadcast.to(this.clientInfo[socket.id].room).emit("typing", msg);
 	}
 
-	broadcastMessage(socket, name, msg) {
+	broadcastMessage(socket, name, msg) { //Broadcasts to all except self
+		console.log('broadcasting message: ' + msg);
 		socket.broadcast.to(this.clientInfo[socket.id].room).emit("message", {
 			text: msg,
 			name: name,
 			timestamp: moment().valueOf(),
 		});
+	}
+
+	sendMessageToRoom(socket, name, msg) { //Broadcasts message to all including self
+		//This could be done like: io.in(userInfo.room).emit("message", { but this is easier to work with:
+		this.broadcastMessage(socket, name, msg);
+		this.message(socket, name, msg);
 	}
 
 	messageFromUsers(socket, msg) {
@@ -65,6 +72,10 @@ class MessageHandler {
 		// emit message when all users list
 
 		this.message(socket, "Current Users : " + users.join(", "));
+	}
+
+	getNameFromSocket(socket) {
+		return this.clientInfo[socket.id].name;
 	}
 }
 

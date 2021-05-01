@@ -10,20 +10,23 @@ class WebSocketFileUpload {
     saveLocation = "/home/cloud/live/frontend/data/";
 
 
-    constructor(socket, fileInput) {
-        this.name = fileInput.name;
+    constructor(socket, messageHandler, fileInput) {
+        this.socket = socket;
+        this.messageHandler = messageHandler;
+
+        this.originalName = fileInput.name;
+        this.extension = fileInput.name.substr(fileInput.name.lastIndexOf('.') + 1); //This logic lended from https://stackoverflow.com/questions/680929/how-to-extract-extension-from-filename-string-in-javascript/680982
         this.size = fileInput.size;
         this.id = fileInput.id;
         this.sliceSize = fileInput.sliceSize;
-
-        this.socket = socket;
+        this.fileName = this.id + "." + this.extension;
 
         this.slices = 0;
     }
 
     //Currently we save entire file in RAM before writing to disk. To support very large files (100mb+) we should probably write to disk
     push(slice) {
-        //Do sanity checks of the slice - if something is weird we abort the transfer.
+        // Do sanity checks of the slice - if something is weird we abort the transfer.
         // This could be replaced with progressive hashing.
         var md5 = CryptoJS.SHA256(slice.data);
         if (slice.data == null || slice.datahash != md5) {
@@ -42,14 +45,14 @@ class WebSocketFileUpload {
             console.log("requesting next slice");
             this.requestNextSlice();
         } else {
-            console.log("Upload should be done if you see this. Saving file");
-
-            this.saveFile()
+            //File upload is finished!
+            this.saveFile();
+            this.broadcastMessageToRoom();
         }
     }
 
     saveFile() {
-        this.filePath = this.saveLocation + this.name;
+        this.filePath = this.saveLocation + this.fileName;
 
         var writeStream = fs.createWriteStream(this.filePath);
         this.data.forEach(value => writeStream.write(value));
@@ -59,12 +62,14 @@ class WebSocketFileUpload {
 
     saveToDatabase() {
         var file = new FileModel();
+
         file._id = new mongoose.Types.ObjectId();
-        file.fileid = this.id;
-        file.name = this.name;
+        file.fileName = this.fileName;
+        file.originalName = this.originalName;
         file.path = this.filePath;
         file.fileSize = this.size;
-        file.fileType = "exe";
+        file.fileType = this.extension;
+
         file.save(async (err) => {
           if (err) {
             res.success = false;
@@ -73,6 +78,16 @@ class WebSocketFileUpload {
             return;
           }
         });
+    }
+
+    broadcastMessageToRoom() {
+        if (this.extension === "png") {
+            this.messageHandler.sendMessageToRoom(this.socket, this.messageHandler.getNameFromSocket(this.socket), 
+            '<img class="chatImage" src="data/' + this.fileName + '">')
+        } else {
+            this.messageHandler.sendMessageToRoom(this.socket, this.messageHandler.getNameFromSocket(this.socket), 
+            'A user has uploaded a file: <a target="_blank" href="data/' + this.fileName + '">' + this.originalName + '</a>');
+        }
     }
 
     FileSaveCallback = (err) => {

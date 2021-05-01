@@ -62,7 +62,7 @@ function validateInput(input, expected) {
 
 // io.on listens for events
 io.sockets.on("connection", function (socket) {
-  new WebSocketUploader(socket); //Kris will connect this to datasbase
+  new WebSocketUploader(socket, messageHandler); //Kris will connect this to datasbase
 
   //for disconnection
   socket.on("disconnect", function () {
@@ -591,7 +591,7 @@ io.sockets.on("connection", function (socket) {
   });
 
   // Room welcome message
-  messageHandler.message(socket, "Welcome to Chat Application !");
+  messageHandler.message(socket, "System", "Welcome to Chat Application !");
 
   // listen for client typing messages
   socket.on("typing", function (message) {
