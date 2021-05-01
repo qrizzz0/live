@@ -39,7 +39,7 @@ const roomHandler = new RoomHandler(clientInfo, messageHandler);
 //socket io module
 var io = require("socket.io")(http, {
   cors: {
-    origin: "http://130.225.170.76",
+    origin: "*", //Maybe change this to single domain for security at some point.
     methods: ["GET", "POST"],
   },
 });
