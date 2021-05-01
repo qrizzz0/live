@@ -1,9 +1,11 @@
 const { throws } = require('assert');
 const fs = require('fs');
 const CryptoJS = require('crypto-js');
+const FileModel = require("../models/file");
+const mongoose = require("mongoose");
 
 class WebSocketFileUpload {
-    FileModel = require("./models/file");
+
     data = [];
     saveLocation = "/home/cloud/live/frontend/data/";
 
@@ -42,34 +44,27 @@ class WebSocketFileUpload {
         } else {
             console.log("Upload should be done if you see this. Saving file");
 
-            /*var newFile = {};
-            newFile._id = new mongoose.Types.ObjectId();
-            newFile.fileid = this.id;
-            newFile.name = this.name;
-            newFile.path: this.fileid;
-            newFile.fileSize: Number;
-            newFile.fileType: String;*/
-
             this.saveFile()
-            this.saveToDatabase();
         }
     }
 
     saveFile() {
-        this.filePath = saveLocation + this.name;
+        this.filePath = this.saveLocation + this.name;
 
-        var writeStream = fs.createWriteStream(filePath);
+        var writeStream = fs.createWriteStream(this.filePath);
         this.data.forEach(value => writeStream.write(value));
+
+        this.saveToDatabase();
     }
 
     saveToDatabase() {
-        var file = new FileModel(newFile);
-        newFile._id = new mongoose.Types.ObjectId();
-        newFile.fileid = this.id;
-        newFile.name = this.name;
-        newFile.path = this.filePath;
-        newFile.fileSize = size;
-        newFile.fileType = "exe";
+        var file = new FileModel();
+        file._id = new mongoose.Types.ObjectId();
+        file.fileid = this.id;
+        file.name = this.name;
+        file.path = this.filePath;
+        file.fileSize = this.size;
+        file.fileType = "exe";
         file.save(async (err) => {
           if (err) {
             res.success = false;
