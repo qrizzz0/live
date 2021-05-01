@@ -35,5 +35,14 @@ let validators = {
     roomid: "",
     newadminid: "",
   },
+  createfile: {
+    id: "",
+    filename: "",
+    size: 0,
+  },
+  removefile: {
+    id: "",
+  },
+
 };
 module.exports = validators;

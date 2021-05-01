@@ -231,7 +231,7 @@ io.sockets.on("connection", function (socket) {
     UserModel.findOne({ _id: req.uid })
       .select(basicUserInfo)
       .exec((err, doc) => {
-        if (err) {
+        if (err) {  
           res.success = false;
           res.err = err;
           socket.emit("getuserinfo", res);
@@ -565,7 +565,7 @@ io.sockets.on("connection", function (socket) {
     if (room.err == null && message.err == null) {
       if (req.userID == room.admin || req.userID == message.sender) {
         if (message.file.exists()) {
-          // Slet fil
+          // Slet fil SKAL LAVES !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
           console.log("File:" + message.file + " deleted");
         }
 
