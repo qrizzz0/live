@@ -18,7 +18,6 @@ class WebSocketUploaderClient {
 
     fileReader.onload = (evt) => {
       var arrayBuffer = fileReader.result;
-      //var md5 = CryptoJS.MD5(arrayBuffer);
       var hash = md5(arrayBuffer);
       console.log("md5 is: " + hash);
       socket.emit('upload first slice', {

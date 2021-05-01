@@ -87,10 +87,21 @@ function uploadFileBetter() {
 }
 
 socket.on("request next slice", function (input) {
+	if (currentUploads[input.id] === undefined) {
+		console.log("File slice for undefined file requested. Sending abort to server.")
+		socket.emit("abort file upload", {
+			id: input.id,
+		});
+	}
+	
 	currentUploads[input.id].uploadSpecificSlice(input.currentSlice);
 	console.log(
 		"next slice: " + input.currentSlice + "requested, id: " + input.id
 	);
+});
+
+socket.on("end upload", function (input) {
+	delete currentUploads[input.id];
 });
 
 //listening for typing  event

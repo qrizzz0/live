@@ -4,6 +4,10 @@ const md5 = require('js-md5');
 const FileModel = require("../models/file");
 const mongoose = require("mongoose");
 
+const imageExtensions = ["jpg", "png", "gif", "svg"];
+const videoExtensions = ["mp4", "webm"];
+const audioExtensions = ["mp3"];
+
 class WebSocketFileUpload {
 
     data = [];
@@ -29,10 +33,12 @@ class WebSocketFileUpload {
         // Do sanity checks of the slice - if something is weird we abort the transfer.
         // This could be replaced with progressive hashing.
         var hash = md5(slice.data);
+        console.log("hash: "+hash);
         if (slice.data == null || slice.datahash != hash) {
             console.log("Something wrong with a slice of data for file: " + this.id + " - Aborting.")
-            console.log("datahash: " + slice.datahash + " md5: " + hash)
-            this.abort();
+            console.log("Slice hash: " + slice.datahash + " Calculated hash: " + hash)
+            this.endUpload();
+            return -1;
         }
 
         //this.data.push(slice.data);
@@ -46,9 +52,12 @@ class WebSocketFileUpload {
             this.requestNextSlice();
         } else {
             //File upload is finished!
+            this.endUpload();
             this.saveFile();
             this.broadcastMessageToRoom();
+            return 1;
         }
+        return 0;
     }
 
     saveFile() {
@@ -81,7 +90,7 @@ class WebSocketFileUpload {
     }
 
     broadcastMessageToRoom() {
-        if (this.extension === "png") {
+        if (imageExtensions.includes(this.extension)) {
             this.messageHandler.sendMessageToRoom(this.socket, this.messageHandler.getNameFromSocket(this.socket), 
             '<img class="chatImage" src="data/' + this.fileName + '">')
         } else {
@@ -102,8 +111,10 @@ class WebSocketFileUpload {
         });
     }
 
-    abort() {
-        console.log("Aborting upload.");
+    endUpload() {
+        this.socket.emit('end upload', {
+            id: this.id,
+        });
     }
 
 }
