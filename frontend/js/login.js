@@ -11,7 +11,7 @@ function checkCookieID() {
     if (getCookieID() === null){
         console.log("User has no CookieID");
     } else {
-        window.location.replace("http://130.225.170.76/room.html");
+        window.location.replace("/room.html");
     }
 }
 

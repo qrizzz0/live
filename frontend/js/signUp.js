@@ -12,7 +12,7 @@ function checkCookieID() {
         console.log("User has no CookieID");
     } else {
         console.log("CookieID112312123: ", localStorage.getItem("cookieID"));
-        window.location.replace("http://130.225.170.76/room.html");
+        window.location.replace("/room.html");
     }
 }
 
