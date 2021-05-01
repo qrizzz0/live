@@ -1,6 +1,6 @@
 const { throws } = require('assert');
 const fs = require('fs');
-const CryptoJS = require('crypto-js');
+const md5 = require('js-md5');
 const FileModel = require("../models/file");
 const mongoose = require("mongoose");
 
@@ -28,10 +28,10 @@ class WebSocketFileUpload {
     push(slice) {
         // Do sanity checks of the slice - if something is weird we abort the transfer.
         // This could be replaced with progressive hashing.
-        var md5 = CryptoJS.SHA256(slice.data);
-        if (slice.data == null || slice.datahash != md5) {
+        var hash = md5(slice.data);
+        if (slice.data == null || slice.datahash != hash) {
             console.log("Something wrong with a slice of data for file: " + this.id + " - Aborting.")
-            console.log("datahash: " + slice.datahash + " md5: " + md5)
+            console.log("datahash: " + slice.datahash + " md5: " + hash)
             this.abort();
         }
 

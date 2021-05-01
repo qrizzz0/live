@@ -18,7 +18,9 @@ class WebSocketUploaderClient {
 
     fileReader.onload = (evt) => {
       var arrayBuffer = fileReader.result;
-      var md5 = CryptoJS.MD5(arrayBuffer);
+      //var md5 = CryptoJS.MD5(arrayBuffer);
+      var hash = md5(arrayBuffer);
+      console.log("md5 is: " + hash);
       socket.emit('upload first slice', {
         name: file.name,
         id: this.id,
@@ -27,7 +29,7 @@ class WebSocketUploaderClient {
         sliceSize: this.sliceSize,
         size: file.size,
         data: arrayBuffer,
-        datahash: md5,
+        datahash: hash,
       });
     }
   }
@@ -39,13 +41,14 @@ class WebSocketUploaderClient {
 
     fileReader.onload = (evt) => {
       var arrayBuffer = fileReader.result;
-      var md5 = CryptoJS.SHA256(arrayBuffer);
-      console.log("md5 is: " + md5);
+      //var md5 = CryptoJS.MD5(arrayBuffer);
+      var hash = md5(arrayBuffer);
+      console.log("md5 is: " + hash);
       socket.emit('upload next slice', {
         id: this.id,
         sliceID: chosenSlice,
         data: arrayBuffer,
-        datahash: md5,
+        datahash: hash,
       });
     }
   }
