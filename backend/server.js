@@ -1,4 +1,4 @@
-var PORT = process.env.PORT || 3005; // take port from heroku or for loacalhost
+var PORT = process.env.PORT || 3000; // take port from heroku or for loacalhost
 var WebSocketUploader = require("./WebSocketUploader/WebSocketUploader.js");
 
 var mongoose = require("mongoose");
@@ -70,11 +70,11 @@ module.exports.validateMail = validateMail;
 io.sockets.on("connection", function (socket) {
 	new WebSocketUploader(socket); //Kris will connect this to datasbase
 
-	//for disconnection
-	socket.on("disconnect", function () {
+	//for disconnection SKAL FIKSES
+	/*socket.on("disconnect", function () {
 		var userdata = clientInfo[socket.id];
 		if (typeof (userdata !== undefined)) {
-			socket.leave(userdata.room); // leave the room
+			//socket.leave(userdata.room); // leave the room
 			//broadcast leave room to only memebers of same room
 			socket.broadcast.to(userdata.room).emit("message", {
 				text: userdata.name + " has left",
@@ -88,7 +88,7 @@ io.sockets.on("connection", function (socket) {
 			delete clientInfo[socket.id];
 		}
 	});
-
+*/
 	socket.on("login", function (req) {
 		userHandler.login(socket, req);
 	});
