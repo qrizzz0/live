@@ -1,3 +1,12 @@
+var socket = io.connect("https://websocket.sovsehytten.tk");
+
+var checkEmail = document.getElementById("email");
+var checkUser = document.getElementById("name");
+var hash_password = document.getElementById("myPassword");
+
+var user = {};
+var checkResponse = false;
+
 function setCookieID(input) {
     localStorage.setItem("cookieID", input);
 }
@@ -10,6 +19,7 @@ function getCookieID() {
 function checkCookieID() {
     if (getCookieID() === null){
         console.log("User has no CookieID");
+        console.log("User: ", user);
     } else {
         console.log("CookieID112312123: ", localStorage.getItem("cookieID"));
         window.location.replace("/room.html");
@@ -23,13 +33,10 @@ function checkEmail() {
 }
 
 function checkFormInput(){
-    var checkEmail = document.getElementById("email");
-    var checkUser = document.getElementById("name");
-    var checkPassword = document.getElementById("myPassword");
-    if (!checkEmail.checkValidity() || !checkUser.checkValidity() || !checkPassword.checkValidity()) {
-        document.getElementById("valid1") = checkEmail.validationMessage;
+    if (!email.checkValidity() || !checkUser.checkValidity() || !hash_password.checkValidity()) {
+        document.getElementById("valid1") = email.validationMessage;
         document.getElementById("valid2") = checkUser.validationMessage;
-        document.getElementById("valid3") = checkPassword.validationMessage;
+        document.getElementById("valid3") = hash_password.validationMessage;
         return false;
     } else{
         return true;
@@ -69,6 +76,16 @@ function checkPasswords() {
 
 checkCookieID();
 console.log("CookieID: ", getCookieID());
+
+socket.on("signup", (res) => {
+    console.log("Respond 2: ", res);
+    if(res.success){
+        checkResponse = true;
+    }else {
+        checkResponse = false;
+    }
+});
+
 function signup () {
     
     if(!checkFormInput()){
@@ -76,10 +93,20 @@ function signup () {
     } else if (!checkPasswords()){
         alert("Passwords must be the same!");
         console.log("Passwords must be the same!");
-    } else{
+    } else if (!checkResponse){
+        alert("User not made in backend");
+    } 
+    else{
         setCookieID(document.getElementById("name").value);
         window.location.replace("/room.html");
     }
-}
+    
+    user.email = email.value;
+    user.username = checkUser.value;
+    user.hashed_password = hash_password.value;
 
-   
+    console.log("User", user);
+    socket.emit("signup", user);
+    
+
+}

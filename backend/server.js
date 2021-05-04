@@ -65,7 +65,7 @@ io.sockets.on("connection", function (socket) {
   new WebSocketUploader(socket, messageHandler); //Kris will connect this to datasbase
 
   //for disconnection
-  socket.on("disconnect", function () {
+  /*socket.on("disconnect", function () {
     var userdata = clientInfo[socket.id];
     if (typeof (userdata !== undefined)) {
       socket.leave(userdata.room); // leave the room
@@ -81,7 +81,7 @@ io.sockets.on("connection", function (socket) {
       // delete user data-
       delete clientInfo[socket.id];
     }
-  });
+  });*/
 
   // VALDEMAR TESTED
   /* Server side login functionality.
@@ -601,7 +601,9 @@ io.sockets.on("connection", function (socket) {
     var roomID = req.roomID;
     var userID = req.userID;
 
-    var room = await RoomModel.find({ _id: req.roomID }, (err) => {
+    var res = {};
+
+    var room = await RoomModel.findOne({ _id: req.roomID }, (err) => {
       if (err) {
         res.success = false;
         res.err = "Can't find room ID";
@@ -610,7 +612,7 @@ io.sockets.on("connection", function (socket) {
       }
     });
 
-    var message = await room.find({ messages: req.messageID }, (err) => {
+    var message = await room.findOne({ messages: req.messageID }, (err) => {
       if (err) {
         res.success = false;
         res.err = "Can't find message ID";

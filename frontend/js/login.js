@@ -1,3 +1,7 @@
+var socket = io.connect("https://websocket.sovsehytten.tk");
+var email = document.getElementById("email");
+var hash_password = document.getElementById("myPassword");
+
 function setCookieID(input) {
     localStorage.setItem("cookieID", input);
 }
@@ -11,16 +15,14 @@ function checkCookieID() {
     if (getCookieID() === null){
         console.log("User has no CookieID");
     } else {
-        window.location.replace("/room.html");
+       // window.location.replace("/room.html");
     }
 }
 
 function checkFormInput(){
-    var checkName = document.getElementById("name");
-    var checkPassword = document.getElementById("myPassword");
-    if (!checkName.checkValidity() || !checkPassword.checkValidity()) {
-        document.getElementById("valid1") = checkName.validationMessage;
-        document.getElementById("valid2") = checkPassword.validationMessage;
+    if (!email.checkValidity() || !hash_password.checkValidity()) {
+        document.getElementById("valid1") = email.validationMessage;
+        document.getElementById("valid2") = hash_password.validationMessage;
         return false;
     } else {
         return true;
@@ -39,14 +41,22 @@ function showPassword() {
 checkCookieID();
 console.log("CookieID: ", getCookieID());
 
+socket.on("login", (res) => {
+    console.log("Respond from login: ", res);
+    if (res.success){
+        //window.location.replace("/room.html");
+    }
+});
+
+
 function login() {
     if (!checkFormInput()){
         console.log("FOrm not valid");
     } else{
         setCookieID(document.getElementById("name").value);
-        window.location.replace("/room.html");
+        socket.emit("login", {
+            email,
+            hash_password
+        });
     }
-        
-    
-    
 }

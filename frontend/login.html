@@ -24,13 +24,13 @@
               Chat Application !</h1>
             <form action="/room.html">
               <div class="form-group">
-                <label for="name">
-                User Name:</label>
+                <label for="email">
+                Email:</label>
                 <div class="input-group">
                   <span class="input-group-addon">
                     <i class="glyphicon glyphicon-user"></i>
                   </span>
-                  <input class="form-control" id="name" name="name" placeholder="" type="text" required>
+                  <input class="form-control" id="email" name="email" placeholder="" type="text" required>
                   <p id="valid1"></p>  
                 </div>
               </div>
@@ -62,4 +62,5 @@
     </div>
   </body>
 </html>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/socket.io/3.1.2/socket.io.min.js"></script>
 <script src="/js/login.js"></script>
