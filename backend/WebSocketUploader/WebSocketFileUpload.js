@@ -37,7 +37,7 @@ class WebSocketFileUpload {
         if (slice.data == null || slice.datahash != hash) {
             console.log("Something wrong with a slice of data for file: " + this.id + " - Aborting.")
             console.log("Slice hash: " + slice.datahash + " Calculated hash: " + hash)
-            this.endUpload();
+            this.endUpload(false);
             return -1;
         }
 
@@ -52,7 +52,7 @@ class WebSocketFileUpload {
             this.requestNextSlice();
         } else {
             //File upload is finished!
-            this.endUpload();
+            this.endUpload(true);
             this.saveFile();
             this.broadcastMessageToRoom();
             return 1;
@@ -114,6 +114,7 @@ class WebSocketFileUpload {
     endUpload() {
         this.socket.emit('end upload', {
             id: this.id,
+            success: this.success,
         });
     }
 

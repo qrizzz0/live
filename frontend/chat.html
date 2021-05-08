@@ -49,10 +49,16 @@
               <input class="btn btn-default btn-block" type="submit"/>
             </div>            
           </form>
-          <form id="send-file" onsubmit="uploadFileBetter();return false" > <!--enctype = type of encryption-->
-            <input type="file" style="display:inline" id="file"/>
-            <input type="submit" value="Send file123"/>
-          </form>
+          <div id = fileUpload>
+            <p>Upload file to room:</p>
+            <form id="send-file" onsubmit="uploadFileBetter();return false" > <!--enctype = type of encryption-->
+              <input type="file" style="display:inline" id="file"/>
+              <input type="submit" value="Send file"/>
+            </form>
+            <div id="progressBar" hidden>
+            <div id="movingBar"></div>
+          </div>
+        </div>
         </div>
       </div>
     </div>
