@@ -1,10 +1,5 @@
 const io = require("socket.io-client");
-<<<<<<< HEAD
 var socket = io.connect("http://localhost:3005");
-const apiinput = require("../backend/validators/APIvalidators");
-=======
-var socket = io.connect("http://localhost:3000");
->>>>>>> 3f475ebd7a83a5fbb8403f2df0e7bb1e54d0d95e
 
 function sleep(ms) {
   return new Promise((resolve) => {
@@ -24,11 +19,10 @@ socket.on("signup", (res) => {
 });
 
 socket.on("login", (res) => {
-	console.log(res);
+  console.log(res);
   validCreateRoom.uid = res.uid;
   validCreateRoom.name = res.name;
 });
-
 
 async function test() {
   await sleep(1000);
@@ -40,20 +34,19 @@ async function test() {
 }
 
 let validuser = {
-	// Success true; only the first time ;)
-	email: "pingvin@linux.com",
-	username: "Bubber",
-	hashed_password: "Bubber",
+  // Success true; only the first time ;)
+  email: "pingvin@linux.com",
+  username: "Bubber",
+  hashed_password: "Bubber",
 };
 
 let loginuser = {
-	// Success true; only the first time ;)
-	login: "pingvin@linux.com",
-	hashed_password: "Bubber",
+  // Success true; only the first time ;)
+  login: "pingvin@linux.com",
+  hashed_password: "Bubber",
 };
-
 
 let validCreateRoom = {
   uid: "",
   name: "",
-}
+};
