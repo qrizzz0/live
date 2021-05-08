@@ -109,7 +109,7 @@ io.sockets.on("connection", function (socket) {
   // Websocket for creating new Rooms
   socket.on("createroom", async (req) => {
     var res = {};
-
+    console.log("Validating input.")
     // UserId creating room is sent
     if (!validateInput(req, apiinput.createroom)) {
       res.success = false;
@@ -117,6 +117,8 @@ io.sockets.on("connection", function (socket) {
       socket.emit("createroom", res);
       return;
     }
+    
+    console.log("Checking the user exists");
     // Check if the user trying to create room exists.
     var doc = await UserModel.exists({ _id: req.uid });
     if (!doc) {
@@ -126,7 +128,8 @@ io.sockets.on("connection", function (socket) {
       socket.emit("createroom", res);
       return;
     }
-
+    
+    console.log("Preparing data")
     // New room is created in database.
     var newroom = {};
     newroom._id = new mongoose.Types.ObjectId();
@@ -134,8 +137,15 @@ io.sockets.on("connection", function (socket) {
     // UserID is added as admin.
     newroom.admin = req.uid;
 
+    // Room name is added
+    newroom.name = req.name;
+
     // UserÌD is added to room.
     newroom.users = [req.uid];
+
+    
+    console.log("New room ready for database: " + newroom);
+
     var room = new RoomModel(newroom);
 
     // Add the room to database.
@@ -146,7 +156,8 @@ io.sockets.on("connection", function (socket) {
         socket.emit("createroom", res);
         return;
       }
-
+      
+    console.log("Room saved in database");
       // Room is added to users list of rooms.
       let updated = await UserModel.updateOne(
         { _id: req.uid },
@@ -156,6 +167,8 @@ io.sockets.on("connection", function (socket) {
           },
         }
       );
+      
+    console.log("Updated user: " + updated);
       if (!(updated.nModified > 0)) {
         res.success = false;
         res.err = err;
