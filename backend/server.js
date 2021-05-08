@@ -188,7 +188,7 @@ io.sockets.on("connection", function (socket) {
   // User is found.
   // Room is found and update the admin to the new user.
   socket.on("changeadmin", async (req) => {
-    res = {};
+    var res = {};
     if (!validateInput(req, apiinput.changeadmin)) {
       res.success = false;
       res.err = "Invalid JSON Request";
@@ -240,7 +240,7 @@ io.sockets.on("connection", function (socket) {
   // and then delete delete room.
   // else error.
   socket.on("removeroom", async (req) => {
-    res = {};
+    var res = {};
 
     if (!validateInput(req, apiinput.removeroom)) {
       res.success = false;
@@ -303,7 +303,7 @@ io.sockets.on("connection", function (socket) {
   // Add user to its list.
   // Send back list of messages.
   socket.on("joinroom", async (req) => {
-    res = {};
+    var res = {};
     // Get user and room ids.
     if (!validateInput(req, apiinput.joinroom)) {
       res.success = false;
@@ -349,7 +349,7 @@ io.sockets.on("connection", function (socket) {
     console.log(room);
 
     res.success = true;
-    res.messages = room.messages;
+    res.room = room;
     socket.emit("joinroom", res);
     // Send back list of messages.
   });
