@@ -95,7 +95,7 @@ class WebSocketFileUpload {
             '<img class="chatImage" src="data/' + this.fileName + '">');
         } else if(videoExtensions.includes(this.extension)) {
             this.messageHandler.sendMessageToRoom(this.socket, this.messageHandler.getNameFromSocket(this.socket), 
-            '<video controls id="chatVideo" src="' + this.fileName + '">');
+            '<video controls id="chatVideo" src="data/' + this.fileName + '">');
         } else {
             this.messageHandler.sendMessageToRoom(this.socket, this.messageHandler.getNameFromSocket(this.socket), 
             'Uploaded file: <a target="_blank" href="data/' + this.fileName + '">' + this.originalName + '</a>');
