@@ -89,378 +89,393 @@ io.sockets.on("connection", function (socket) {
 		}
 	});
 */
-	socket.on("login", function (req) {
-		userHandler.login(socket, req);
-	});
+  socket.on("login", function (req) {
+    userHandler.login(socket, req);
+  });
 
-	socket.on("signup", async function (req) {
-		userHandler.signup(socket, req);
-	});
+  socket.on("signup", async function (req) {
+    userHandler.signup(socket, req);
+  });
 
-	socket.on("modFriend", function (req) {
-		userHandler.modFriend(socket, req);
-	});
+  socket.on("modFriend", function (req) {
+    userHandler.modFriend(socket, req);
+  });
 
-	socket.on("getuserinfo", function (req) {
-		userHandler.getUserInfo(socket, req);
-	});
+  socket.on("getuserinfo", function (req) {
+    userHandler.getUserInfo(socket, req);
+  });
 
-	// VALDEMAR NOT TESTED
-	// Websocket for creating new Rooms
-	socket.on("createroom", async (req) => {
-		var res = {};
+  // VALDEMAR NOT TESTED
+  // Websocket for creating new Rooms
+  socket.on("createroom", async (req) => {
+    var res = {};
+    console.log("Validating input.");
+    // UserId creating room is sent
+    if (!validateInput(req, apiinput.createroom)) {
+      res.success = false;
+      res.err = "Invalid JSON Request";
+      socket.emit("createroom", res);
+      return;
+    }
 
-		// UserId creating room is sent
-		if (!validateInput(req, apiinput.createroom)) {
-			res.success = false;
-			res.err = "Invalid JSON Request";
-			socket.emit("createroom", res);
-			return;
-		}
-		// Check if the user trying to create room exists.
-		var doc = await UserModel.exists({ _id: req.uid });
-		if (!doc) {
-			//false if it doesn't exist.
-			res.success = false;
-			res.err = "User couldn't be identified";
-			socket.emit("createroom", res);
-			return;
-		}
+    console.log("Checking the user exists");
+    // Check if the user trying to create room exists.
+    var doc = await UserModel.exists({ _id: req.uid });
+    if (!doc) {
+      //false if it doesn't exist.
+      res.success = false;
+      res.err = "User couldn't be identified";
+      socket.emit("createroom", res);
+      return;
+    }
 
-		// New room is created in database.
-		var newroom = {};
-		newroom._id = new mongoose.Types.ObjectId();
+    console.log("Preparing data");
+    // New room is created in database.
+    var newroom = {};
+    newroom._id = new mongoose.Types.ObjectId();
 
-		// UserID is added as admin.
-		newroom.admin = req.uid;
+    // UserID is added as admin.
+    newroom.admin = req.uid;
 
-		// UserÌD is added to room.
-		newroom.users = [req.uid];
-		var room = new RoomModel(newroom);
+    // Room name is added
+    newroom.name = req.name;
 
-		// Add the room to database.
-		room.save(async (err) => {
-			if (err) {
-				res.success = false;
-				res.err = err;
-				socket.emit("createroom", res);
-				return;
-			}
+    // UserÌD is added to room.
+    newroom.users = [req.uid];
 
-			// Room is added to users list of rooms.
-			let updated = await UserModel.updateOne(
-				{ _id: req.uid },
-				{
-					$push: {
-						rooms: newroom._id,
-					},
-				}
-			);
-			if (!(updated.nModified > 0)) {
-				res.success = false;
-				res.err = err;
-				socket.emit("createroom", res);
-				return;
-			}
+    console.log("New room ready for database: " + newroom);
 
-			res.success = true;
-			socket.emit("createroom", res);
-		});
-	});
+    var room = new RoomModel(newroom);
 
-	// VALDEMAR NOT TESTED
-	// Websocket for changing admin.
-	// Find room.
-	// Criteria the new admin must be part of the room.
-	// UserInfo for the new admin is sent.
-	// User is found.
-	// Room is found and update the admin to the new user.
-	socket.on("changeadmin", async (req) => {
-		res = {};
-		if (!validateInput(req, apiinput.changeadmin)) {
-			res.success = false;
-			res.err = "Invalid JSON Request";
-			socket.emit("changeadmin", res);
-			return;
-		}
-		// TODO: Fix error checking
-		// Get list of users in the requested room.
-		let users = await RoomModel.findOne({ _id: req.roomid })
-			.select("users")
-			.exec();
-		if (users === null) {
-			res.success = false;
-			res.err = "Invalid JSON Request";
-			socket.emit("changeadmin", res);
-			return;
-		}
-		// Check if the new admin is in the list of users.
-		if (!users.includes(req.newadminid)) {
-			res.success = false;
-			res.err = "The user is not a part of the chat.";
-			socket.emit("changeadmin", res);
-			return;
-		}
-		// Find the room and update the admin to the newadmin.
-		let updated = await RoomModel.updateOne(
-			{ _id: req.roomid },
-			{ admin: req.newadminid }
-		);
-		if (!(updated.nModified > 0)) {
-			res.success = false;
-			res.err = err;
-			socket.emit("changeadmin", res);
-			return;
-		}
+    // Add the room to database.
+    room.save(async (err) => {
+      if (err) {
+        res.success = false;
+        res.err = err;
+        socket.emit("createroom", res);
+        return;
+      }
 
-		res.success = true;
-		socket.emit("changeadmin", res);
-	});
+      console.log("Room saved in database");
+      // Room is added to users list of rooms.
+      let updated = await UserModel.updateOne(
+        { _id: req.uid },
+        {
+          $push: {
+            rooms: newroom._id,
+          },
+        }
+      );
 
-	// VALDEMAR NOT TESTED
-	// Websocket for deleting existing rooms.
-	// Only room admin is allowed to remove chatrooms.
-	// UserInfo is sent.
-	// User is found.
-	// Compare user to registered admin.
-	// Remove all messages
-	// if same, then remove room from each user in the room.
-	// and then delete delete room.
-	// else error.
-	socket.on("removeroom", async (req) => {
-		res = {};
+      console.log("Updated user: " + updated);
+      if (!(updated.nModified > 0)) {
+        res.success = false;
+        res.err = err;
+        socket.emit("createroom", res);
+        return;
+      }
 
-		if (!validateInput(req, apiinput.removeroom)) {
-			res.success = false;
-			res.err = "Invalid JSON Request";
-			socket.emit("removeroom", res);
-			return;
-		}
+      res.success = true;
+      socket.emit("createroom", res);
+    });
+  });
 
-		let room = await RoomModel.findOne({ _id: req.roomid }).exec();
+  // VALDEMAR NOT TESTED
+  // Websocket for changing admin.
+  // Find room.
+  // Criteria the new admin must be part of the room.
+  // UserInfo for the new admin is sent.
+  // User is found.
+  // Room is found and update the admin to the new user.
+  socket.on("changeadmin", async (req) => {
+    res = {};
+    if (!validateInput(req, apiinput.changeadmin)) {
+      res.success = false;
+      res.err = "Invalid JSON Request";
+      socket.emit("changeadmin", res);
+      return;
+    }
+    // TODO: Fix error checking
+    // Get list of users in the requested room.
+    let users = await RoomModel.findOne({ _id: req.roomid })
+      .select("users")
+      .exec();
+    if (users === null) {
+      res.success = false;
+      res.err = "Invalid JSON Request";
+      socket.emit("changeadmin", res);
+      return;
+    }
+    // Check if the new admin is in the list of users.
+    if (!users.includes(req.newadminid)) {
+      res.success = false;
+      res.err = "The user is not a part of the chat.";
+      socket.emit("changeadmin", res);
+      return;
+    }
+    // Find the room and update the admin to the newadmin.
+    let updated = await RoomModel.updateOne(
+      { _id: req.roomid },
+      { admin: req.newadminid }
+    );
+    if (!(updated.nModified > 0)) {
+      res.success = false;
+      res.err = err;
+      socket.emit("changeadmin", res);
+      return;
+    }
 
-		if (!(room.admin === req.uid)) {
-			res.success = false;
-			res.err = "User isn't admin, therefore can't delete the chatroom.";
-			socket.emit("removeroom", res);
-			return;
-		}
+    res.success = true;
+    socket.emit("changeadmin", res);
+  });
 
-		// Remove all messages in the chatroom.
-		// TODO: Remember to delete the locally stored files.
-		let deleted = await MessageModel.deleteMany({
-			_id: { $in: room.messages },
-		});
+  // VALDEMAR NOT TESTED
+  // Websocket for deleting existing rooms.
+  // Only room admin is allowed to remove chatrooms.
+  // UserInfo is sent.
+  // User is found.
+  // Compare user to registered admin.
+  // Remove all messages
+  // if same, then remove room from each user in the room.
+  // and then delete delete room.
+  // else error.
+  socket.on("removeroom", async (req) => {
+    res = {};
 
-		if (!(deleted.deletedCount > 0)) {
-			res.success = false;
-			res.err = "Messages couldn't be deleted";
-			socket.emit("removeroom", res);
-			return;
-		}
+    if (!validateInput(req, apiinput.removeroom)) {
+      res.success = false;
+      res.err = "Invalid JSON Request";
+      socket.emit("removeroom", res);
+      return;
+    }
 
-		// Remove the room object from the list user room, in each user.
-		let updated = await UserModel.updateMany(
-			{ _id: { $in: room.users } },
-			{ $pull: { rooms: { _id: room._id } } }
-		);
-		if (!(updated.nModified > 0)) {
-			res.success = false;
-			res.err = "Messages couldn't be deleted";
-			socket.emit("removeroom", res);
-			return;
-		}
+    let room = await RoomModel.findOne({ _id: req.roomid }).exec();
 
-		// Delete the room itself.
-		await RoomModel.deleteOne({ _id: room._id }, (err) => {
-			if (err) {
-				res.success = false;
-				res.err = err;
-				socket.emit("removeroom", res);
-				return;
-			}
-			res.success = true;
-			socket.emit("removeroom", res);
-		});
-	});
+    if (!(room.admin === req.uid)) {
+      res.success = false;
+      res.err = "User isn't admin, therefore can't delete the chatroom.";
+      socket.emit("removeroom", res);
+      return;
+    }
 
-	// VALDEMAR NOT TESTED
-	// Websocket for joining rooms.
-	// UserInfo is sent.
-	// Find the linked room.
-	// Add user to its list.
-	// Send back list of messages.
-	socket.on("joinroom", async (req) => {
-		res = {};
-		// Get user and room ids.
-		if (!validateInput(req, apiinput.joinroom)) {
-			res.success = false;
-			res.err = "Invalid JSON Request";
-			socket.emit("joinroom", res);
-			return;
-		}
+    // Remove all messages in the chatroom.
+    // TODO: Remember to delete the locally stored files.
+    let deleted = await MessageModel.deleteMany({
+      _id: { $in: room.messages },
+    });
 
-		// Add user to room list.
-		let updated = await RoomModel.updateOne(
-			{ _id: req.roomid }, // Filter
-			{
-				// Update
-				$push: {
-					users: req.uid,
-				},
-			}
-		);
-		if (!(updated.nModified > 0)) {
-			res.success = false;
-			res.err = "Room couldn't be identified";
-			socket.emit("joinroom", res);
-			return;
-		}
+    if (!(deleted.deletedCount > 0)) {
+      res.success = false;
+      res.err = "Messages couldn't be deleted";
+      socket.emit("removeroom", res);
+      return;
+    }
 
-		// Add room to user list.
-		updated = await UserModel.updateOne(
-			{ _id: req.uid }, // Filter
-			{
-				// Update
-				$push: {
-					rooms: req.roomid,
-				},
-			}
-		);
-		if (!(updated.nModified > 0)) {
-			res.success = false;
-			res.err = "User couldn't be identified";
-			socket.emit("joinroom", res);
-			return;
-		}
-		console.log(user);
-		console.log(room);
+    // Remove the room object from the list user room, in each user.
+    let updated = await UserModel.updateMany(
+      { _id: { $in: room.users } },
+      { $pull: { rooms: { _id: room._id } } }
+    );
+    if (!(updated.nModified > 0)) {
+      res.success = false;
+      res.err = "Messages couldn't be deleted";
+      socket.emit("removeroom", res);
+      return;
+    }
 
-		res.success = true;
-		res.messages = room.messages;
-		socket.emit("joinroom", res);
-		// Send back list of messages.
-	});
+    // Delete the room itself.
+    await RoomModel.deleteOne({ _id: room._id }, (err) => {
+      if (err) {
+        res.success = false;
+        res.err = err;
+        socket.emit("removeroom", res);
+        return;
+      }
+      res.success = true;
+      socket.emit("removeroom", res);
+    });
+  });
 
-	// VALDEMAR NOT TESTED
-	// Websocket for leaving rooms.
-	// UserInfo is sent.
-	// Find the wished room.
-	// remove user from room.
-	// remove the room from the user.
-	socket.on("leaveroom", async (req) => {
-		var res = {};
-		if (!validateInput(req, apiinput.leaveroom)) {
-			res.success = false;
-			res.err = "Invalid JSON Request";
-			socket.emit("leaveroom", res);
-			return;
-		}
+  // VALDEMAR NOT TESTED
+  // Websocket for joining rooms.
+  // UserInfo is sent.
+  // Find the linked room.
+  // Add user to its list.
+  // Send back list of messages.
+  socket.on("joinroom", async (req) => {
+    res = {};
+    // Get user and room ids.
+    if (!validateInput(req, apiinput.joinroom)) {
+      res.success = false;
+      res.err = "Invalid JSON Request";
+      socket.emit("joinroom", res);
+      return;
+    }
 
-		// Remove user from the room.
-		let updated = await RoomModel.updateOne(
-			{ _id: req.roomid },
-			{ $pull: { users: { _id: req.uid } } }
-		);
-		if (!(updated.nModified > 0)) {
-			res.success = false;
-			res.err = "User couldn't be removed from the room";
-			socket.emit("leaveroom", res);
-			return;
-		}
+    // Add user to room list.
+    let updated = await RoomModel.updateOne(
+      { _id: req.roomid }, // Filter
+      {
+        // Update
+        $push: {
+          users: req.uid,
+        },
+      }
+    );
+    if (!(updated.nModified > 0)) {
+      res.success = false;
+      res.err = "Room couldn't be identified";
+      socket.emit("joinroom", res);
+      return;
+    }
 
-		// Remove room from the user.
-		updated = await UserModel.updateOne(
-			{ _id: req.uid },
-			{ $pull: { rooms: { _id: req.roomid } } }
-		);
-		if (!(updated.nModified > 0)) {
-			res.success = false;
-			res.err = "Room couldn't be removed from the user";
-			socket.emit("leaveroom", res);
-			return;
-		}
+    // Add room to user list.
+    updated = await UserModel.updateOne(
+      { _id: req.uid }, // Filter
+      {
+        // Update
+        $push: {
+          rooms: req.roomid,
+        },
+      }
+    );
+    if (!(updated.nModified > 0)) {
+      res.success = false;
+      res.err = "User couldn't be identified";
+      socket.emit("joinroom", res);
+      return;
+    }
+    console.log(user);
+    console.log(room);
 
-		res.success = true;
-		socket.emit("leaveroom", res);
-	});
+    res.success = true;
+    res.messages = room.messages;
+    socket.emit("joinroom", res);
+    // Send back list of messages.
+  });
 
-	// Websocket for handling messages.
-	// UserInfo, RoomInfo and message is sent.
-	// Create new message.
-	// If file do file transfer.
-	// Add message to room.
-	// Broadcast message to members.
+  // VALDEMAR NOT TESTED
+  // Websocket for leaving rooms.
+  // UserInfo is sent.
+  // Find the wished room.
+  // remove user from room.
+  // remove the room from the user.
+  socket.on("leaveroom", async (req) => {
+    var res = {};
+    if (!validateInput(req, apiinput.leaveroom)) {
+      res.success = false;
+      res.err = "Invalid JSON Request";
+      socket.emit("leaveroom", res);
+      return;
+    }
 
-	// NOT TESTED
-	// Delete message.
-	// Message info is sent.
-	// If there is a file.
-	// Find file.
-	// Delete physical file.
-	// Remove file from database.
-	// Remove message from database.
-	socket.on("deletemessage", async (req) => {
+    // Remove user from the room.
+    let updated = await RoomModel.updateOne(
+      { _id: req.roomid },
+      { $pull: { users: { _id: req.uid } } }
+    );
+    if (!(updated.nModified > 0)) {
+      res.success = false;
+      res.err = "User couldn't be removed from the room";
+      socket.emit("leaveroom", res);
+      return;
+    }
 
-		var room = await RoomModel.find({ _id: req.roomID }, (err) => {
-			if (err) {
-				res.success = false;
-				res.err = "Can't find room ID";
-				socket.emit("deletemessage", res);
-				return;
-			}
-		});
+    // Remove room from the user.
+    updated = await UserModel.updateOne(
+      { _id: req.uid },
+      { $pull: { rooms: { _id: req.roomid } } }
+    );
+    if (!(updated.nModified > 0)) {
+      res.success = false;
+      res.err = "Room couldn't be removed from the user";
+      socket.emit("leaveroom", res);
+      return;
+    }
 
-		var message = await room.find({ messages: req.messageID }, (err) => {
-			if (err) {
-				res.success = false;
-				res.err = "Can't find message ID";
-				socket.emit("deletemessage", res);
-				return;
-			}
-		});
+    res.success = true;
+    socket.emit("leaveroom", res);
+  });
 
-		if (room.err == null && message.err == null) {
-			if (req.userID == room.admin || req.userID == message.sender) {
-				if (message.file.exists()) {
-					// Slet fil  SKAL LAVES !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
-					console.log("File:" + message.file + " deleted");
-				}
+  // Websocket for handling messages.
+  // UserInfo, RoomInfo and message is sent.
+  // Create new message.
+  // If file do file transfer.
+  // Add message to room.
+  // Broadcast message to members.
 
-				// Slet besked
-				MessageModel.findByIdAndDelete({ id_: message._id }, (err) => {
-					if (err) {
-						res.success = false;
-						res.err = "Can't delete message";
-						socket.emit("deletemessage", res);
-						return;
-					}
-				});
-				console.log("Message" + message.text + " deleted");
-				res.success = true;
-				res.err = "Message deleted";
-				socket.emit("deletemessage", res);
-			}
-		}
-	});
+  // NOT TESTED
+  // Delete message.
+  // Message info is sent.
+  // If there is a file.
+  // Find file.
+  // Delete physical file.
+  // Remove file from database.
+  // Remove message from database.
+  socket.on("deletemessage", async (req) => {
+    var messageID = req.messageID;
+    var roomID = req.roomID;
+    var userID = req.userID;
 
-	// for private chat
-	socket.on("joinRoom", function (req) {
-		roomHandler.joinRoom(socket, "joinRoom", req);
-	});
+    var room = await RoomModel.find({ _id: req.roomID }, (err) => {
+      if (err) {
+        res.success = false;
+        res.err = "Can't find room ID";
+        socket.emit("deletemessage", res);
+        return;
+      }
+    });
 
-	// Room welcome message
-	messageHandler.message(socket, "System", "Welcome to Chat Application !");
+    var message = await room.find({ messages: req.messageID }, (err) => {
+      if (err) {
+        res.success = false;
+        res.err = "Can't find message ID";
+        socket.emit("deletemessage", res);
+        return;
+      }
+    });
 
-	// listen for client typing messages
-	socket.on("typing", function (message) {
-		messageHandler.broadcastTyping(socket, message);
-	});
+    if (room.err == null && message.err == null) {
+      if (req.userID == room.admin || req.userID == message.sender) {
+        if (message.file.exists()) {
+          // Slet fil  SKAL LAVES !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+          console.log("File:" + message.file + " deleted");
+        }
 
-	// listen for client message
-	socket.on("message", function (message) {
-		messageHandler.messageFromUsers(socket, message);
-	});
+        // Slet besked
+        MessageModel.findByIdAndDelete({ id_: message._id }, (err) => {
+          if (err) {
+            res.success = false;
+            res.err = "Can't delete message";
+            socket.emit("deletemessage", res);
+            return;
+          }
+        });
+        console.log("Message" + message.text + " deleted");
+        res.success = true;
+        res.err = "Message deleted";
+        socket.emit("deletemessage", res);
+      }
+    }
+  });
+
+  // for private chat
+  socket.on("joinRoom", function (req) {
+    roomHandler.joinRoom(socket, "joinRoom", req);
+  });
+
+  // Room welcome message
+  messageHandler.message(socket, "System", "Welcome to Chat Application !");
+
+  // listen for client typing messages
+  socket.on("typing", function (message) {
+    messageHandler.broadcastTyping(socket, message);
+  });
+
+  // listen for client message
+  socket.on("message", function (message) {
+    messageHandler.messageFromUsers(socket, message);
+  });
 });
 /* Socket.io for database controllers */
 
