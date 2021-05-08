@@ -151,7 +151,7 @@ io.sockets.on("connection", function (socket) {
       //false if it doesn't exist.
       res.success = false;
       res.err = "User couldn't be identified";
-      socket.emit("createroom", res);
+      socket.emit("createroom", res); 
       return;
     }
 
@@ -331,7 +331,7 @@ io.sockets.on("connection", function (socket) {
   socket.on("joinroom", async (req) => {
     res = {};
     console.log("Socket is authorized? " + socket.authorized);
-    
+        
     // KRIS DO THIS 
     if(!socket.authorized){
       res.success = false;
@@ -384,7 +384,6 @@ io.sockets.on("connection", function (socket) {
     console.log(room);
 
     res.success = true;
-    socket.join(room._id);
     res.messages = room.messages;
     socket.emit("joinroom", res);
     // Send back list of messages.

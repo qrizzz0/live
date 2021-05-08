@@ -101,6 +101,7 @@ class UserHandler {
       res.user = doc;
       socket.authorized = true;
       socket.emit("login", res);
+      
     } else {
       // Emit false if not authenticated.
       // Wrong password
