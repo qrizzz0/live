@@ -71,6 +71,9 @@ if (typeof document.hidden !== "undefined") {
 
 function uploadFileBetter() {
 	var fileInput = document.getElementById("file");
+
+	document.getElementById("progressBar").hidden = false;
+
 	if ("files" in fileInput) {
 		if (fileInput.files.length == 0) {
 			console.log("No file selected!");
@@ -98,10 +101,17 @@ socket.on("request next slice", function (input) {
 	console.log(
 		"next slice: " + input.currentSlice + "requested, id: " + input.id
 	);
+
+	document.getElementById("movingBar").style.width = currentUploads[input.id].getProgress(input.currentSlice) + "%";
 });
 
 socket.on("end upload", function (input) {
 	delete currentUploads[input.id];
+	if (input.success = true) {
+		document.getElementById("progressBar").hidden = true;
+	} else {
+		document.getElementById("movingBar").style.backgroundColor = "red";
+	}
 });
 
 //listening for typing  event

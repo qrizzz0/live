@@ -37,7 +37,7 @@ class WebSocketFileUpload {
         if (slice.data == null || slice.datahash != hash) {
             console.log("Something wrong with a slice of data for file: " + this.id + " - Aborting.")
             console.log("Slice hash: " + slice.datahash + " Calculated hash: " + hash)
-            this.endUpload();
+            this.endUpload(false);
             return -1;
         }
 
@@ -52,7 +52,7 @@ class WebSocketFileUpload {
             this.requestNextSlice();
         } else {
             //File upload is finished!
-            this.endUpload();
+            this.endUpload(true);
             this.saveFile();
             this.broadcastMessageToRoom();
             return 1;
@@ -92,10 +92,13 @@ class WebSocketFileUpload {
     broadcastMessageToRoom() {
         if (imageExtensions.includes(this.extension)) {
             this.messageHandler.sendMessageToRoom(this.socket, this.messageHandler.getNameFromSocket(this.socket), 
-            '<img class="chatImage" src="data/' + this.fileName + '">')
+            '<img class="chatImage" src="data/' + this.fileName + '">');
+        } else if(videoExtensions.includes(this.extension)) {
+            this.messageHandler.sendMessageToRoom(this.socket, this.messageHandler.getNameFromSocket(this.socket), 
+            '<video controls id="chatVideo" src="data/' + this.fileName + '">');
         } else {
             this.messageHandler.sendMessageToRoom(this.socket, this.messageHandler.getNameFromSocket(this.socket), 
-            'A user has uploaded a file: <a target="_blank" href="data/' + this.fileName + '">' + this.originalName + '</a>');
+            'Uploaded file: <a target="_blank" href="data/' + this.fileName + '">' + this.originalName + '</a>');
         }
     }
 
@@ -114,6 +117,7 @@ class WebSocketFileUpload {
     endUpload() {
         this.socket.emit('end upload', {
             id: this.id,
+            success: this.success,
         });
     }
 

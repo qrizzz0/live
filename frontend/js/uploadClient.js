@@ -51,4 +51,8 @@ class WebSocketUploaderClient {
       });
     }
   }
+
+  getProgress(chosenSlice) {
+    return ((chosenSlice + 1)* this.sliceSize) / this.file.size * 100;
+  }
 }
