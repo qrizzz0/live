@@ -2,6 +2,7 @@ var socket = io.connect("https://websocket.sovsehytten.tk");
 var email = document.getElementById("email");
 var hash_password = document.getElementById("myPassword");
 
+var checkResponseLogin = false;
 function setCookieID(input) {
     localStorage.setItem("cookieID", input);
 }
@@ -47,19 +48,27 @@ function showPassword() {
 checkCookieID();
 console.log("CookieID: ", getCookieID());
 
-
+socket.on("login", (res) => {
+    console.log("Respond from login: ", res);
+    if(res.success){
+        checkResponse = true;
+        setCookieID(document.getElementById("email").value);
+        window.location.replace("/room.html");
+    }else {
+        checkResponse = false;
+        document.getElementById("valid1") = "No user in backend";
+    }
+});
 
 function login() { //LOGIN VIRKER IKKE ORDENTLIGT. Man bliver logget ind selv om man ikke er en bruger
     if (!checkFormInput()){
         console.log("Form not valid");
         alert("Form invald");
-    } else if(!checkCookieID()) {
-        alert("No cookie id");
-    } else {
-        setCookieID(document.getElementById("email").value);
+    } else{
         socket.emit("login", {
             email,
             hash_password
         });
     }
+    
 }

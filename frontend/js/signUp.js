@@ -5,7 +5,7 @@ var checkUser = document.getElementById("name");
 var hash_password = document.getElementById("myPassword");
 
 var user = {};
-var checkResponse = false;
+var checkResponseSignUp = false;
 
 function setCookieID(input) {
     localStorage.setItem("cookieID", input);
@@ -78,11 +78,11 @@ checkCookieID();
 console.log("CookieID: ", getCookieID());
 
 socket.on("signup", (res) => {
-    console.log("Respond 2: ", res);
+    console.log("Respond from signup: ", res);
     if(res.success){
-        checkResponse = true;
+        checkResponseSignUp = true;
     }else {
-        checkResponse = false;
+        checkResponseSignUp = false;
     }
 });
 
@@ -93,20 +93,18 @@ function signup () {
     } else if (!checkPasswords()){
         alert("Passwords must be the same!");
         console.log("Passwords must be the same!");
-    } else if (checkResponse){
-        console.log("User made in backend");
-    } 
-    else{
+    }else{
+        user.email = email.value;
+        user.username = checkUser.value;
+        user.hashed_password = hash_password.value;
+
+        console.log("User", user);
+        socket.emit("signup", user);
         setCookieID(document.getElementById("email").value);
         window.location.replace("/room.html");
     }
     
-    user.email = email.value;
-    user.username = checkUser.value;
-    user.hashed_password = hash_password.value;
-
-    console.log("User", user);
-    socket.emit("signup", user);
+    
     
 
 }
