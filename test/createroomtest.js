@@ -9,7 +9,7 @@ function sleep(ms) {
 socket.on("connect", () => {
   test();
 });
-socket.on("login", (res) => {
+socket.on("createroom", (res) => {
   console.log(res);
 });
 
@@ -40,13 +40,13 @@ let notchat = {
 
 async function test() {
   await sleep(1000);
-  socket.emit("login", validchat);
+  socket.emit("createroom", validchat);
   await sleep(1000);
-  socket.emit("login", validchat1);
+  socket.emit("createroom", validchat1);
   await sleep(1000);
-  socket.emit("login", invalidchat);
+  socket.emit("createroom", invalidchat);
   await sleep(1000);
-  socket.emit("login", notchat);
+  socket.emit("createroom", notchat);
   await sleep(1000);
   socket.disconnect();
 }
