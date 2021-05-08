@@ -15,7 +15,7 @@ function checkCookieID() {
     if (getCookieID() === null){
         console.log("User has no CookieID");
     } else {
-       // window.location.replace("/room.html");
+       window.location.replace("/room.html");
     }
 }
 
@@ -27,6 +27,12 @@ function checkFormInput(){
     } else {
         return true;
     }
+}
+
+function checkEmailInput() {
+    var rfc2822regex = /[a-z0-9!#$%&'*+/=?^_`{|}~-]+(?:\.[a-z0-9!#$%&'*+/=?^_`{|}~-]+)*@(?:[a-z0-9](?:[a-z0-9-]*[a-z0-9])?\.)+[a-z0-9](?:[a-z0-9-]*[a-z0-9])?/;
+    var mail = document.getElementById("email");
+    return rfc2822regex.test(mail);
 }
 
 function showPassword() {
@@ -41,19 +47,16 @@ function showPassword() {
 checkCookieID();
 console.log("CookieID: ", getCookieID());
 
-socket.on("login", (res) => {
-    console.log("Respond from login: ", res);
-    if (res.success){
-        //window.location.replace("/room.html");
-    }
-});
 
 
-function login() {
+function login() { //LOGIN VIRKER IKKE ORDENTLIGT. Man bliver logget ind selv om man ikke er en bruger
     if (!checkFormInput()){
-        console.log("FOrm not valid");
-    } else{
-        setCookieID(document.getElementById("name").value);
+        console.log("Form not valid");
+        alert("Form invald");
+    } else if(!checkCookieID()) {
+        alert("No cookie id");
+    } else {
+        setCookieID(document.getElementById("email").value);
         socket.emit("login", {
             email,
             hash_password

@@ -26,7 +26,7 @@ function checkCookieID() {
     }
 }
 
-function checkEmail() {
+function checkEmailInput() {
     var rfc2822regex = /[a-z0-9!#$%&'*+/=?^_`{|}~-]+(?:\.[a-z0-9!#$%&'*+/=?^_`{|}~-]+)*@(?:[a-z0-9](?:[a-z0-9-]*[a-z0-9])?\.)+[a-z0-9](?:[a-z0-9-]*[a-z0-9])?/;
     var mail = document.getElementById("email");
     return rfc2822regex.test(mail);
@@ -86,18 +86,18 @@ socket.on("signup", (res) => {
     }
 });
 
-function signup () {
+function signup () {  
     
     if(!checkFormInput()){
         console.log("Not a valid form!")
     } else if (!checkPasswords()){
         alert("Passwords must be the same!");
         console.log("Passwords must be the same!");
-    } else if (!checkResponse){
-        alert("User not made in backend");
+    } else if (checkResponse){
+        console.log("User made in backend");
     } 
     else{
-        setCookieID(document.getElementById("name").value);
+        setCookieID(document.getElementById("email").value);
         window.location.replace("/room.html");
     }
     
