@@ -105,6 +105,32 @@ io.sockets.on("connection", function (socket) {
     userHandler.getUserInfo(socket, req);
   });
 
+  // Websocket for getting all rooms.
+  socket.on("getallrooms", (req) => {
+    var res = {};
+
+    // UserId creating room is sent
+    if (!validateInput(req, apiinput.getallrooms)) {
+      res.success = false;
+      res.err = "Invalid JSON Request";
+      socket.emit("getallrooms", res);
+      return;
+    }
+
+    RoomModel.find().exec((err, docs) => {
+      if (err) {
+        res.success = false;
+        res.err = err;
+        socket.emit("getallrooms", res);
+        return;
+      }
+      res.success = true;
+      res.rooms = docs;
+      socket.emit("getallrooms", res);
+      return;
+    });
+  });
+  
   // VALDEMAR NOT TESTED
   // Websocket for creating new Rooms
   socket.on("createroom", async (req) => {
@@ -304,6 +330,15 @@ io.sockets.on("connection", function (socket) {
   // Send back list of messages.
   socket.on("joinroom", async (req) => {
     res = {};
+    console.log("Socket is authorized? " + socket.authorized);
+    
+    // KRIS DO THIS 
+    if(!socket.authorized){
+      res.success = false;
+      res.err = "Socket isn't authorized";
+      socket.emit("joinroom", res);
+      return;
+    }
     // Get user and room ids.
     if (!validateInput(req, apiinput.joinroom)) {
       res.success = false;
@@ -349,6 +384,7 @@ io.sockets.on("connection", function (socket) {
     console.log(room);
 
     res.success = true;
+    socket.join(room._id);
     res.messages = room.messages;
     socket.emit("joinroom", res);
     // Send back list of messages.
@@ -460,8 +496,8 @@ io.sockets.on("connection", function (socket) {
   });
 
   // for private chat
-  socket.on("joinRoom", function (req) {
-    roomHandler.joinRoom(socket, "joinRoom", req);
+  socket.on("LogInToSocket", function (req) {
+    roomHandler.LogIn(socket, req);
   });
 
   // Room welcome message

@@ -1,26 +1,58 @@
 var socket = io.connect("https://websocket.sovsehytten.tk");
 // listen for server connection
 // get query params from url
-var room = getQueryVariable("room") || "No Room Selected";
+var room = localStorage.getItem("roomID");
 
 var currentUploads = {};
 
-console.log("Local storage: ", localStorage.getItem("cookieID"));
+function getRoomCookie() {
+    var rID = localStorage.getItem("roomID");
+    return JSON.parse(rID);
+}
+function setRoomCookie(input) {
+    localStorage.setItem("roomID", input);
+}
+function getCookieID() {
+    var cID = localStorage.getItem("cookieID");
+    return JSON.parse(cID);
+}
+
+console.log("Local storage: ", getRoomCookie());
+
 
 //document.getElementById("room-title").innerHTML = room;
-$(".room-title").text(room);
-console.log("Room: ", room);
+//$(".room-title").text(getRoomCookie().name);
+console.log("RoomID: ", getRoomCookie());
 // fires when client successfully conencts to the server
 socket.on("connect", function () {
 	console.log("Connected to Socket I/O Server!");
+    console.log("Socket test: ", socket.id);
 	console.log(name + " wants to join  " + room);
 	// to join a specific room
-	socket.emit("joinRoom", {
-		name: name,
-		room: room,
+	let userInfo  = getCookieID();
+	let roomInfo = getRoomCookie();
+	if(userInfo == null){
+		alert("You cannot access the chat module when not logged in!");
+		window.location.replace("/login.html");
+	}else if(roomInfo == null){
+		alert("You cannot access the chat module without choosing a room!");
+		window.location.replace("/room.html");
+	}
+	socket.emit("login", {
+		login: userInfo.email,
+		hashed_password: userInfo.hashed_password
 	});
 });
 
+socket.on("login", function(res){
+	if (res.success){
+		console.log("Is Authorized");
+		socket.emit("joinroom", {
+			uid: "",
+			roomid: ""
+		});
+	}
+});
 ///////////////// Clean this timeout shit up
 // below code is to know when typing is there
 var timeout;
@@ -35,6 +67,10 @@ function timeoutFunction() {
 	
 }
 
+function exitChat(){
+	localStorage.removeItem("roomID");
+	window.location.replace("/room.html");
+}
 ///////////////// Clean this up
 // if key is pressed typing message is seen else auto after 2 sec typing false message is send
 // TODO : add broadcast event when server receives typing event
@@ -67,6 +103,11 @@ if (typeof document.hidden !== "undefined") {
 } else if (typeof document.webkitHidden !== "undefined") {
 	hidden = "webkitHidden";
 	visibilityChange = "webkitvisibilitychange";
+}
+
+function redirectToRoom() {
+	setRoomCookie(null);
+	window.location.replace("/room.html");
 }
 
 function uploadFileBetter() {

@@ -1,41 +1,86 @@
 var socket = io.connect("https://websocket.sovsehytten.tk");
 
-var name = getQueryVariable("name") || "Anonymous";
-var greetings = "Welcome " + localStorage.getItem("cookieID") + "!";
+function getCookieID() {
+    var cID = localStorage.getItem("cookieID");
+    return JSON.parse(cID);
+}
+function setCookieID(input) {
+    localStorage.setItem("cookieID", input);
+}
+function setRoomCookie(input) {
+    localStorage.setItem("roomID", input);
+}
+function getRoomCookie() {
+    var rID = localStorage.getItem("roomID");
+    return rID;
+}
+
+var greetings = "Welcome " + getCookieID().username + "!";
 document.getElementById("header-text").innerHTML = greetings;
-console.log(name);
-console.log("Local storage: ", localStorage.getItem("cookieID"));
+console.log("CookieID: ", getCookieID());
+console.log("RoomID: ", getRoomCookie());
 var room;
 
-socket.on("createroom", (res) => {
+socket.on("createroom", (res) => {  
     console.log("Respond: ", res);
     if (res.success){
         console.log("ROOM CREATED!");
+        socket.emit("getallrooms", {
+
+        });
     }
 });
 
 
-socket.on("getallrooms", (res) => { // Denne funktion virker ikke ordentligt
-    console.log("Function call: getallrooms ");
+socket.on("getallrooms", (res) => { 
+    document.getElementById("list-group").innerHTML = "";
+    
+    console.log("Socket test: ", socket.id);
+    console.log("RoomCookie: ", getRoomCookie());
     if (res.success){
         res.rooms.forEach(function(item, index, array){
-            var thisIssBullshiet = document.createElement("li");
-            var allRooms = document.createElement("a");
-            var currentRoom = document.createTextNode(item.name);
+           // var thisIssBullshiet = document.createElement("li");
+            var allRooms = document.createElement("li");
+            var textnode = document.createTextNode(item.name);
+            allRooms.appendChild(textnode); 
+            allRooms.setAttribute("class", "rooms");
+            var currentRoom = document.createElement("input");
+            var roomInfo = document.createTextNode(JSON.stringify(item));
+            currentRoom.setAttribute("type", "radio");
+            currentRoom.setAttribute("name", "room");
+            
+            currentRoom.setAttribute("class", "radioBtn");
+            currentRoom.setAttribute("value", item.name);
+            currentRoom.appendChild(roomInfo);
+            
             allRooms.appendChild(currentRoom);
-            thisIssBullshiet.appendChild(allRooms);
-            document.getElementById("list-group").appendChild(thisIssBullshiet);
+           // thisIssBullshiet.appendChild(allRooms);
+            document.getElementById("list-group").appendChild(allRooms);
         });
     }
     console.log("Respond: ", res);
+    
+
+    
 });
 socket.emit("getallrooms", {
 
 });
 
-
+console.log("Room cookie: ", getRoomCookie());
+function redirectToChat() {
+    const rbs = document.querySelectorAll('input[name="room"]');
+    for (const rb of rbs) {
+        if (rb.checked){
+            console.log("Button checked with name : ", rb);     
+            setRoomCookie(rb.textContent);
+            window.location.replace("/chat.html");
+        }
+    }
+}
 
 function redirectToLogin() {
+    
     localStorage.removeItem("cookieID");
     window.location.replace("/login.html");
 }
@@ -50,7 +95,7 @@ function searchRooms(){ // Man skal ikke kunne joine 'No room selected'
     var li = ul.getElementsByTagName("li");
     var a, txtValue;
     for (i = 0; i < li.length; i++) {
-        a = li[i].getElementsByTagName("a")[0];
+        a = li[i].getElementsByTagName("input")[0];
         txtValue = a.textContent || a.innerText;
         if (txtValue.toUpperCase().indexOf(filter) > -1) {
             li[i].style.display = "";
@@ -64,7 +109,7 @@ function searchRooms(){ // Man skal ikke kunne joine 'No room selected'
 function createRooms() {
 
     var name = document.getElementById("create").value;
-    var uid = "608d5e6bb3795957df1a9d2f"; //SKal være dynamisk og ikke hardcodet
+    var uid = getCookieID()._id; //SKal være dynamisk og ikke hardcodet
     console.log("Room name: ", name);
 
     socket.emit("createroom", {

@@ -99,6 +99,7 @@ class UserHandler {
       // Emit true if authenticated.
       res.success = true;
       res.user = doc;
+      socket.authorized = true;
       socket.emit("login", res);
     } else {
       // Emit false if not authenticated.
