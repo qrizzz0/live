@@ -1,3 +1,5 @@
+const FileModel = require("../models/file");
+const mongoose = require("mongoose");
 var WebSocketFileUpload = require('./WebSocketFileUpload.js');
 
 class WebSocketUploader {
@@ -40,7 +42,13 @@ class WebSocketUploader {
         if (uploader.push(input) !== 0) {
             delete(this.currentUploads[input.id]);
         };
-    }  
+    }
+    
+    
+    deleteFile(mongo_id) {
+        var file = new FileModel();
+        
+    }
 }
 
 module.exports = WebSocketUploader
