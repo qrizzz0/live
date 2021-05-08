@@ -1,5 +1,6 @@
 const io = require("socket.io-client");
-var socket = io.connect("http://172.23.96.245:3000");
+var socket = io.connect("http://localhost:3005");
+const apiinput = require("../backend/validators/APIvalidators");
 
 function sleep(ms) {
   return new Promise((resolve) => {
@@ -9,35 +10,46 @@ function sleep(ms) {
 socket.on("connect", () => {
   test();
 });
+
 socket.on("createroom", (res) => {
   console.log(res);
 });
 
-let validroom = {
-  // Success true; Valid in test environment.
-  uid: "608d3ec173828f9ca07ca655",
-};
+socket.on("signup", (res) => {
+  console.log(res);
+});
 
-let invaliduser = {
-  // Success false; Valid in test environment.
-  email: "marshall@matters.com",
-  hashed_password: "UMOM",
-};
+socket.on("login", (res) => {
+	console.log(res);
+  validCreateRoom.uid = res.uid;
+  validCreateRoom.name = res.name;
+});
 
-let notuser = {
-  // Success false; Should also never be valid.
-  date: "19/12/2020",
-  age: 21,
-  essential: true,
-};
 
 async function test() {
   await sleep(1000);
-  socket.emit("createroom", validuser);
+  socket.emit("login", loginuser);
   await sleep(1000);
-  socket.emit("createroom", invaliduser);
-  await sleep(1000);
-  socket.emit("createroom", notuser);
+  socket.emit("createroom", validCreateRoom);
   await sleep(1000);
   socket.disconnect();
+}
+
+let validuser = {
+	// Success true; only the first time ;)
+	email: "pingvin@linux.com",
+	username: "Bubber",
+	hashed_password: "Bubber",
+};
+
+let loginuser = {
+	// Success true; only the first time ;)
+	login: "pingvin@linux.com",
+	hashed_password: "Bubber",
+};
+
+
+let validCreateRoom = {
+  uid: "",
+  name: "",
 }

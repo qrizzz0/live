@@ -1,4 +1,4 @@
-var PORT = process.env.PORT || 3000; // take port from heroku or for loacalhost
+var PORT = process.env.PORT || 3005; // take port from heroku or for loacalhost
 var WebSocketUploader = require("./WebSocketUploader/WebSocketUploader.js");
 
 var mongoose = require("mongoose");
@@ -401,9 +401,6 @@ io.sockets.on("connection", function (socket) {
 	// Remove file from database.
 	// Remove message from database.
 	socket.on("deletemessage", async (req) => {
-		var messageID = req.messageID;
-		var roomID = req.roomID;
-		var userID = req.userID;
 
 		var room = await RoomModel.find({ _id: req.roomID }, (err) => {
 			if (err) {
