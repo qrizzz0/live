@@ -68,7 +68,7 @@ module.exports.validateMail = validateMail;
 
 // io.on listens for events
 io.sockets.on("connection", function (socket) {
-  new WebSocketUploader(socket); //Kris will connect this to datasbase
+  new WebSocketUploader(socket, messageHandler); //Kris will connect this to datasbase
 
   //for disconnection SKAL FIKSES
   /*socket.on("disconnect", function () {
