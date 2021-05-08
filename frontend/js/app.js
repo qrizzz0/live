@@ -110,7 +110,7 @@ socket.on("end upload", function (input) {
 	if (input.success = true) {
 		document.getElementById("progressBar").hidden = true;
 	} else {
-		document.getElementById("movingBar").style.background-color = "red";
+		document.getElementById("movingBar").style.backgroundColor = "red";
 	}
 });
 
