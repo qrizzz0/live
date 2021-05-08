@@ -60,7 +60,7 @@ class MessageHandler {
 		if (typeof info === "undefined") {
 			return;
 		}
-		// filte name based on rooms
+		// filter name based on rooms
 		Object.keys(this.clientInfo).forEach(function (socketId) {
 			var userinfo = this.clientInfo[socketId];
 			// check if user room and selcted room same or not

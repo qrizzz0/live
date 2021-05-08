@@ -5,7 +5,7 @@
 
 let validators = {
   login: {
-    email: "",
+    login: "",
     hashed_password: "",
   },
   signup: {
@@ -48,6 +48,5 @@ let validators = {
   removefile: {
     id: "",
   },
-
 };
 module.exports = validators;

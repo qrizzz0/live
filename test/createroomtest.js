@@ -1,6 +1,10 @@
 const io = require("socket.io-client");
+<<<<<<< HEAD
 var socket = io.connect("http://localhost:3005");
 const apiinput = require("../backend/validators/APIvalidators");
+=======
+var socket = io.connect("http://localhost:3000");
+>>>>>>> 3f475ebd7a83a5fbb8403f2df0e7bb1e54d0d95e
 
 function sleep(ms) {
   return new Promise((resolve) => {

@@ -15,7 +15,8 @@ socket.on("createroom", (res) => {
 });
 
 
-socket.on("getallrooms", (res) => {
+socket.on("getallrooms", (res) => { // Denne funktion virker ikke ordentligt
+    console.log("Function call: getallrooms ");
     if (res.success){
         res.rooms.forEach(function(item, index, array){
             var thisIssBullshiet = document.createElement("li");
@@ -39,7 +40,8 @@ function redirectToLogin() {
     window.location.replace("/login.html");
 }
 
-function searchRooms(){
+function searchRooms(){ // Man skal ikke kunne joine 'No room selected'
+    // Man skal ikke komme videre til at vælge rooms uden at være logget ind
 
     
     var input = document.getElementById("search");
@@ -62,7 +64,7 @@ function searchRooms(){
 function createRooms() {
 
     var name = document.getElementById("create").value;
-    var uid = "608d5e6bb3795957df1a9d2f";
+    var uid = "608d5e6bb3795957df1a9d2f"; //SKal være dynamisk og ikke hardcodet
     console.log("Room name: ", name);
 
     socket.emit("createroom", {
