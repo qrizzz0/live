@@ -51,6 +51,25 @@ ul.messages.list-group {
 	border: none;
 }
 
+ul {
+	margin-top: 10px;
+	list-style-type: none;
+	text-align: center;
+}
+.rooms {
+	border: 1px solid black;
+	margin-bottom: 1rem;
+}
+
+.rooms .radioBtn {
+	margin-left: 25px;
+	display: inline;
+}
+
+.form-group {
+	display: inline-block;
+}
+
 select::-webkit-scrollbar {
 	width: 0;
 	height: 0;

@@ -1,4 +1,6 @@
 var moment = require("moment");
+const MessageModel = require("../models/message");
+const mongoose = require("mongoose");
 
 class MessageHandler {
 	constructor(clientInfo) {
@@ -6,76 +8,66 @@ class MessageHandler {
 	}
 
 	message(socket, name, text) {
-		socket.emit("message", {
-			text: text,
-			name: name,
-			timestamp: moment().valueOf(),
-		});
+		var msg = {};
+		msg.text = text;
+		msg.timestamp = moment().valueOf();
+		msg.name = name;
+
+		this.addMessageToDB(msg, null);
+
+		socket.emit("message", msg);
 	}
 
-	broadcastTyping(socket, msg) {
-		socket.broadcast.to(this.clientInfo[socket.id].room).emit("typing", msg);
+	broadcastTyping(socket, text) {
+		socket.broadcast.to(this.clientInfo[socket.id].room).emit("typing", text);
 	}
 
-	broadcastMessage(socket, name, msg) { //Broadcasts to all except self
+	broadcastMessage(socket, name, text, fileID) {
 		console.log('broadcasting message: ' + msg);
-		socket.broadcast.to(this.clientInfo[socket.id].room).emit("message", {
-			text: msg,
-			name: name,
-			timestamp: moment().valueOf(),
-		});
-	}
 
-	sendMessageToRoom(socket, name, msg) { //Broadcasts message to all including self
-		//This could be done like: io.in(userInfo.room).emit("message", { but this is easier to work with:
-		this.broadcastMessage(socket, name, msg);
-		this.message(socket, name, msg);
+		var msg = {};
+		msg.text = text;
+		msg.timestamp = moment().valueOf();
+		msg.name = name;
+
+		this.addMessageToDB(msg, fileID);
+
+		//Broadcasts to all except self
+		socket.broadcast.to(this.clientInfo[socket.id].room).emit("message", msg);
+		//Also send to self
+		socket.emit("message", msg);
 	}
 
 	messageFromUsers(socket, msg) {
-		console.log(
-			"Message Received : " +
-				msg.text +
-				"\nFrom room: " +
-				this.clientInfo[socket.id].room +
-				" \nFrom user: " +
-				this.clientInfo[socket.id].name
-		);
-		// to show all current users
-		if (msg.text === "@currentUsers") {
-			sendCurrentUsers(socket);
-		} else {
-			//broadcast to all users except for sender
-			msg.timestamp = moment().valueOf();
-			// now message should be only sent to users who are in same room
-			socket.broadcast.to(this.clientInfo[socket.id].room).emit("message", msg);
-		}
-	}
+		console.log("Message Received : " +	msg.text + "\nFrom room: " + this.clientInfo[socket.id].room + " \nFrom user: " + this.clientInfo[socket.id].name);
 
-	// send current users to provided scoket
-	sendCurrentUsers(socket) {
-		// loading current users
-		var info = this.clientInfo[socket.id];
-		var users = [];
-		if (typeof info === "undefined") {
-			return;
-		}
-		// filter name based on rooms
-		Object.keys(this.clientInfo).forEach(function (socketId) {
-			var userinfo = this.clientInfo[socketId];
-			// check if user room and selcted room same or not
-			// as user should see names in only his chat room
-			if (info.room == userinfo.room) {
-				users.push(userinfo.name);
-			}
-		});
-		// emit message when all users list
+		this.addMessageToDB(msg, null);
 
-		this.message(socket, "Current Users : " + users.join(", "));
+		socket.broadcast.to(this.clientInfo[socket.id].room).emit("message", msg);
 	}
 
 	getNameFromSocket(socket) {
 		return this.clientInfo[socket.id].name;
+	}
+
+	addMessageToDB(msg, file) {
+		console.log("Adding message to DB: " + msg.text);
+		var message = new MessageModel();
+
+		message._id = new mongoose.Types.ObjectId();
+		message.sender = msg.name;
+		message.timestamp = msg.timestamp;
+		message.text = msg.text;
+		if (file) {
+			message.file = file;
+		}
+
+		message.save(async (err) => {
+			if (err) {
+			  throw err;
+			  return;
+			}
+		  });
 	}
 }
 

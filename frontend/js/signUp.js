@@ -100,7 +100,7 @@ function signup () {
 
         console.log("User", user);
         socket.emit("signup", user);
-        setCookieID(document.getElementById("email").value);
+        setCookieID(user);
         window.location.replace("/room.html");
     }
     
