@@ -6,6 +6,8 @@ var _ = require("lodash");
 function validateInput(input, expected) {
   var inputKeys = Object.keys(input);
   var expectedKeys = Object.keys(expected);
+  inputKeys.sort();
+  expectedKeys.sort();
   return _.isEqual(inputKeys, expectedKeys);
 }
 
@@ -61,6 +63,11 @@ let validators = {
   },
   removefile: {
     id: "",
+  },
+  message: {
+    uid: "",
+    roomid: "",
+    msg: "",
   },
 };
 module.exports.validators = validators;

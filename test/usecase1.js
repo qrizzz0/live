@@ -80,15 +80,24 @@ socket.on("createroom", (res) => {
   } else console.log("Createroom error: " + res.err);
 });
 
-socket.on("joinroom", (res) => {
+socket.on("joinroom", async (res) => {
   console.log("Socket.id: " + socket.id);
   console.log("Joinroom: " + JSON.stringify(res));
   if (res.success) {
-    socket.emit("leaveroom", { uid: user._id, roomid: room._id }); // When sendmessage is made
+    socket.emit("message", {
+      msg: "Hello from " + user.username,
+      uid: user._id,
+      roomid: room._id,
+    }); // When sendmessage is made
+    await sleep(1000);
+    socket.emit("leaveroom", {
+      uid: user._id,
+      roomid: room._id,
+    });
   } else console.log("Joinroom error: " + res.err);
 });
 
-socket.on("sendmessage", (res) => {
+socket.on("message", (res) => {
   console.log("Socket.id: " + socket.id);
   console.log("Sendmessage response: " + JSON.stringify(res));
 });

@@ -11,9 +11,9 @@
 */
 
 /* Get Mongoose models for database work */
-var UserModel = require("./models/user");
-var RoomModel = require("./models/room");
-var MessageModel = require("./models/message");
+var UserModel = require("../models/user");
+var RoomModel = require("../models/room");
+var MessageModel = require("../models/message");
 
 const apiinput = require("../validators/APIvalidators");
 
@@ -345,7 +345,7 @@ class RoomHandler {
   }
 
   async joinroom(socket, req) {
-    res = {};
+    var res = {};
     console.log("Socket.id " + socket.id);
     console.log("Socket is authorized? " + socket.authorized);
     // KRIS DO THIS

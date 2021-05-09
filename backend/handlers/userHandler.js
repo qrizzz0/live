@@ -89,7 +89,7 @@ class UserHandler {
 
     let doc = {};
 
-    if (apiinput.validateMail(user.login)) {
+    if (validateMail(user.login)) {
       doc = await UserModel.findOne({ email: user.login }).exec();
       if (doc === null) {
         // no user found
