@@ -1,3 +1,9 @@
+/*
+  API CALLS:
+  signup: This is for creating a new user in the database. NON-AUTHORIZED
+  login: This is for logging in an existing user. This is also the function to authorize the socket the user is using. NON-AUTHORIZED
+  getuserinfo: This is for returning sorted userinfo for clients. In case of friend functions all userinfo shouldn't be returned: NON-AUTHORIZED
+*/
 var UserModel = require("../models/user.js");
 var mongoose = require("mongoose");
 const apiinput = require("../validators/APIvalidators");
@@ -12,6 +18,7 @@ function validateMail(mail) {
 }
 
 class UserHandler {
+  // KRIS Signup doesn't authorize the socket. And therefore needs to run login after signup.
   async signup(socket, req) {
     var res = {};
     // Get signup information about the new user.
@@ -107,6 +114,8 @@ class UserHandler {
       // Emit true if authenticated.
       res.success = true;
       res.user = doc;
+      // KRIS This is where we authorize the specific socket. They need to use the login API and provide the login information in order to get their socket authorized.
+      // Sockets themselves are consistent server_side and bound to specific socket ids. The authorized attribute is not send to client.
       socket.authorized = true;
       socket.emit("login", res);
     } else {

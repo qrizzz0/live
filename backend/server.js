@@ -128,7 +128,7 @@ io.sockets.on("connection", function (socket) {
   // and then delete delete room.
   // else error.
   socket.on("deleteroom", async (req) => {
-    roomHandler.removeroom(socket, req);
+    roomHandler.deleteroom(socket, req);
   });
 
   // VALDEMAR NOT TESTED

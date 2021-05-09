@@ -1,3 +1,15 @@
+/*
+  API CALLS:
+  getallrooms: This gives back an list of all the rooms in the database. NON-AUTHORIZED
+  createroom: This creates a new room in the database. And adds the room to the user whom created it. AUTHORIZED
+  deleteroom: This removes a room from the database, and cleans up the models depending on the room. AUTHORIZED
+  addroom: This is for adding a user to the room, and vice versa. Linking users to their rooms in the database. AUTHORIZED
+  removeroom: This is for removing a user to the room, and vice versa. Unlinking users to their rooms in the database. AUTHORIZED
+  joinroom: This is for joining the socket to an socket room. This is used for grouping sockets to their chatrooms. AUTHORIZED
+  leaveroom: This is for leaving the socket from its socket room. We can then controlling the clients sockets. AUTHORIZED
+  changeadmin: This is for changing the rooms registred admin to someone else. AUTHORIZED
+*/
+
 /* Get Mongoose models for database work */
 var UserModel = require("./models/user");
 var RoomModel = require("./models/room");
@@ -42,6 +54,8 @@ class RoomHandler {
     var res = {};
     console.log("Socket.id " + socket.id);
     console.log("Socket is authorized? " + socket.authorized);
+    // KRIS This is how we force authorized use of the API. Only when the socket has been authorized. This API Call can be used.
+    // We this will force the frontend, to either re-login using the cached login info, or go to the login screen.
     if (!socket.authorized) {
       res.success = false;
       res.err = "Socket isn't authorized";
@@ -161,6 +175,7 @@ class RoomHandler {
     res.success = true;
     socket.emit("changeadmin", res);
   }
+
   async addroom(socket, req) {
     res = {};
     console.log("Socket.id " + socket.id);
@@ -223,7 +238,7 @@ class RoomHandler {
     res = {};
     console.log("Socket.id " + socket.id);
     console.log("Socket is authorized? " + socket.authorized);
-    // KRIS DO THIS
+
     if (!socket.authorized) {
       res.success = false;
       res.err = "Socket isn't authorized";
@@ -266,7 +281,8 @@ class RoomHandler {
     socket.emit("removeroom", res);
     // Send back room to update frontend.
   }
-  async removeroom(socket, req) {
+
+  async deleteroom(socket, req) {
     var res = {};
 
     if (!apiinput.validateInput(req, apiinput.validators.removeroom)) {
@@ -327,8 +343,9 @@ class RoomHandler {
       socket.emit("deleteroom", res);
     });
   }
-  joinroom(socket, req) {
-	res = {};
+
+  async joinroom(socket, req) {
+    res = {};
     console.log("Socket.id " + socket.id);
     console.log("Socket is authorized? " + socket.authorized);
     // KRIS DO THIS
@@ -374,12 +391,14 @@ class RoomHandler {
     }
     res.success = true;
     res.room = room;
+
+    // KRIS Gave functionality to leave and join socket rooms dependent on socket.authorized. rooms names are their id.
     socket.join(room._id);
     socket.emit("joinroom", res);
     // Send back list of messages.
   }
-  async leaveroom(socket, req){
-	  
+
+  async leaveroom(socket, req) {
     var res = {};
     if (!apiinput.validateInput(req, apiinput.validators.leaveroom)) {
       res.success = false;
@@ -406,7 +425,7 @@ class RoomHandler {
     if (room === null) {
       res.success = false;
       res.err = "Room couldn't be identified";
-      socket.emit("joinroom", res);
+      socket.emit("leaveroom", res);
       return;
     }
     // Find user.
@@ -414,7 +433,7 @@ class RoomHandler {
     if (user === null) {
       res.success = false;
       res.err = "User couldn't be identified";
-      socket.emit("joinroom", res);
+      socket.emit("leaveroom", res);
       return;
     }
 
@@ -424,15 +443,22 @@ class RoomHandler {
     if (!(room.users.includes(req.uid) || user.rooms.includes(req.roomid))) {
       res.success = false;
       res.err = "Either user wasn't a part of the room, or the reverse";
-      socket.emit("joinroom", res);
+      socket.emit("leaveroom", res);
       return;
     }
 
     res.success = true;
+    // KRIS Gave functionality to leave and join socket rooms dependent on socket.authorized.
     socket.leave(room._id);
     socket.emit("leaveroom", res);
   }
+
   LogIn(socket, req) {
+    // KRIS This pseudocode has been implemented in userHandler.login, where we set the authorized attribute on the specific socket which logged in.
+    // KRIS The part where joining the sockets to socket rooms, has been implemented in joinroom and leaveroom. They have been rewritten to be
+    // about allowing allow join and leave in socket rooms.
+    // while addroom and removeroom have been added to be about manipulating the rooms in the database.
+    //
     /*var user = req;
 		var doc = await UserModel.exists({ email: user.email });
 		if (!doc) {
