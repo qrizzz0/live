@@ -1,14 +1,21 @@
-var tool = require("../server.js");
 var UserModel = require("../models/user.js");
 var mongoose = require("mongoose");
 const apiinput = require("../validators/APIvalidators");
 const basicUserInfo = ["username", "email"];
 
+// Validate mail format, by matching with RFC 2822 standard regex.
+// Return boolean.
+// https://stackoverflow.com/questions/46155/how-to-va lidate-an-email-address-in-javascript
+function validateMail(mail) {
+  var rfc2822regex = /[a-z0-9!#$%&'*+/=?^_`{|}~-]+(?:\.[a-z0-9!#$%&'*+/=?^_`{|}~-]+)*@(?:[a-z0-9](?:[a-z0-9-]*[a-z0-9])?\.)+[a-z0-9](?:[a-z0-9-]*[a-z0-9])?/;
+  return rfc2822regex.test(mail);
+}
+
 class UserHandler {
   async signup(socket, req) {
     var res = {};
     // Get signup information about the new user.
-    if (!tool.validateInput(req, apiinput.signup)) {
+    if (!apiinput.validateInput(req, apiinput.validators.signup)) {
       res.success = false;
       res.err = "Invalid JSON Request";
       socket.emit("signup", res);
@@ -18,7 +25,7 @@ class UserHandler {
     newuser._id = new mongoose.Types.ObjectId();
 
     // Validate mailstring
-    if (!tool.validateMail(newuser.email)) {
+    if (!validateMail(newuser.email)) {
       res.success = false;
       res.err = "Not a valid email format";
       socket.emit("signup", res);
@@ -63,7 +70,7 @@ class UserHandler {
   async login(socket, req) {
     var res = {};
 
-    if (!tool.validateInput(req, apiinput.login)) {
+    if (!apiinput.validateInput(req, apiinput.validators.login)) {
       res.success = false;
       res.err = "Invalid JSON Request";
       socket.emit("login", res);
@@ -75,7 +82,7 @@ class UserHandler {
 
     let doc = {};
 
-    if (tool.validateMail(user.login)) {
+    if (apiinput.validateMail(user.login)) {
       doc = await UserModel.findOne({ email: user.login }).exec();
       if (doc === null) {
         // no user found
@@ -116,7 +123,7 @@ class UserHandler {
     // UserID is sent.
     var res = {};
     // Get userID information about the new user.
-    if (tool.validateInput(req, apiinput.getuserinfo)) {
+    if (apiinput.validateInput(req, apiinput.validators.getuserinfo)) {
       res.success = false;
       res.err = "Invalid JSON Request";
       socket.emit("getuserinfo", res);

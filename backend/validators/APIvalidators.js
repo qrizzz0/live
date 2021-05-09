@@ -1,7 +1,13 @@
+var _ = require("lodash");
 /*
     This file is to give a recipe for the input.
     We can then control the format of inputs depending on the each API function.
 */
+function validateInput(input, expected) {
+  var inputKeys = Object.keys(input);
+  var expectedKeys = Object.keys(expected);
+  return _.isEqual(inputKeys, expectedKeys);
+}
 
 let validators = {
   login: {
@@ -57,4 +63,5 @@ let validators = {
     id: "",
   },
 };
-module.exports = validators;
+module.exports.validators = validators;
+module.exports.validateInput = validateInput;
