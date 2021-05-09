@@ -52,8 +52,6 @@ class RoomHandler {
 
 	async createroom(socket, req) {
 		var res = {};
-		console.log("Socket.id " + socket.id);
-		console.log("Socket is authorized? " + socket.authorized);
 		// KRIS This is how we force authorized use of the API. Only when the socket has been authorized. This API Call can be used.
 		// We this will force the frontend, to either re-login using the cached login info, or go to the login screen.
 		if (!socket.authorized) {
@@ -62,7 +60,6 @@ class RoomHandler {
 			socket.emit("createroom", res);
 			return;
 		}
-		console.log("Validating input.");
 		// UserId creating room is sent
 		if (!apiinput.validateInput(req, apiinput.validators.createroom)) {
 			res.success = false;
@@ -71,7 +68,6 @@ class RoomHandler {
 			return;
 		}
 
-		console.log("Checking the user exists");
 		// Check if the user trying to create room exists.
 		var doc = await UserModel.exists({ _id: req.uid });
 		if (!doc) {
@@ -82,7 +78,6 @@ class RoomHandler {
 			return;
 		}
 
-		console.log("Preparing data");
 		// New room is created in database.
 		var newroom = {};
 		newroom._id = new mongoose.Types.ObjectId();
@@ -96,8 +91,6 @@ class RoomHandler {
 		// UserÌD is added to room.
 		newroom.users = [req.uid];
 
-		console.log("New room ready for database: " + newroom);
-
 		var room = new RoomModel(newroom);
 
 		// Add the room to database.
@@ -109,7 +102,6 @@ class RoomHandler {
 				return;
 			}
 
-			console.log("Room saved in database");
 			// Room is added to users list of rooms.
 			let updated = await UserModel.updateOne(
 				{ _id: req.uid },
@@ -120,7 +112,6 @@ class RoomHandler {
 				}
 			);
 
-			console.log("Updated user: " + updated);
 			if (!(updated.nModified > 0)) {
 				res.success = false;
 				res.err = err;
@@ -178,8 +169,6 @@ class RoomHandler {
 
 	async addroom(socket, req) {
 		var res = {};
-		console.log("Socket.id " + socket.id);
-		console.log("Socket is authorized? " + socket.authorized);
 		// KRIS DO THIS
 		if (!socket.authorized) {
 			res.success = false;
@@ -236,8 +225,6 @@ class RoomHandler {
 	}
 	async removeroom(socket, req) {
 		res = {};
-		console.log("Socket.id " + socket.id);
-		console.log("Socket is authorized? " + socket.authorized);
 
 		if (!socket.authorized) {
 			res.success = false;
@@ -346,8 +333,6 @@ class RoomHandler {
 
 	async joinroom(socket, req) {
 		var res = {};
-		console.log("Socket.id " + socket.id);
-		console.log("Socket is authorized? " + socket.authorized);
 		// KRIS DO THIS
 		if (!socket.authorized) {
 			res.success = false;
@@ -355,8 +340,6 @@ class RoomHandler {
 			socket.emit("joinroom", res);
 			return;
 		}
-		console.log(req);
-		console.log(apiinput.validateInput(req, apiinput.validators.joinroom));
 		// Get user and room ids.
 		if (!apiinput.validateInput(req, apiinput.validators.joinroom)) {
 			res.success = false;
@@ -383,8 +366,6 @@ class RoomHandler {
 		}
 
 		// Is user part of the room and is the room part of room.
-		console.log("Room contains user? " + room.users.includes(req.uid));
-		console.log("User contains room? " + user.rooms.includes(req.roomid));
 		if (!(room.users.includes(req.uid) || user.rooms.includes(req.roomid))) {
 			res.success = false;
 			res.err = "Either user wasn't a part of the room, or the reverse";
@@ -396,6 +377,14 @@ class RoomHandler {
 
 		// KRIS Gave functionality to leave and join socket rooms dependent on socket.authorized. rooms names are their id.
 		socket.join(req.roomid);
+
+		this.messageHandler.broadcastMessage(
+			socket,
+			"system",
+			user.username + " has joined",
+			null,
+			req.roomid
+		);
 		socket.emit("joinroom", res);
 		// Send back list of messages.
 	}

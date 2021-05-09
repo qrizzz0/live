@@ -27,20 +27,21 @@ class MessageHandler {
 		socket.broadcast.to(req.roomid).emit("typing", req.text);
 	}
 
-	broadcastMessage(socket, name, text, fileID) {
-		console.log("broadcasting message: " + msg);
-
+	broadcastMessage(socket, name, text, fileID, roomid) {
+		var res = {};
 		var msg = {};
 		msg.text = text;
 		msg.timestamp = moment().valueOf();
 		msg.name = name;
 
+		console.log("broadcasting message: " + msg);
 		//this.addMessageToDB(msg, fileID);
-
+		res.success = true;
+		res.msg = msg;
 		//Broadcasts to all except self
-		socket.broadcast.to(this.clientInfo[socket.id].roomid).emit("message", msg);
+		socket.broadcast.to(roomid).emit("message", res);
 		//Also send to self
-		socket.emit("message", msg);
+		socket.emit("message", res);
 	}
 
 	messageFromUsers(socket, msg) {

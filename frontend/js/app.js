@@ -19,9 +19,10 @@ function getCookieID() {
 
 console.log("Local storage: ", getRoomCookie());
 
-//document.getElementById("room-title").innerHTML = room;
-//$(".room-title").text(getRoomCookie().name);
 console.log("RoomID: ", getRoomCookie());
+document.getElementById("room-title").innerHTML = getRoomCookie().name;
+//$(".room-title").text(getRoomCookie().name);
+
 // fires when client successfully conencts to the server
 socket.on("connect", function () {
 	console.log("Connected to Socket I/O Server!");
