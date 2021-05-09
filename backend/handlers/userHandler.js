@@ -49,6 +49,7 @@ class UserHandler {
       .save()
       .then((r) => {
         res.success = true;
+        res.user = r;
         socket.emit("signup", res);
       })
       .catch((err) => {

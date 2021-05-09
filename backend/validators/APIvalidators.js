@@ -24,6 +24,14 @@ let validators = {
   findroom: {
     name: "",
   },
+  addroom: {
+    uid: "",
+    roomid: "",
+  },
+  deleteroom: {
+    roomid: "",
+    uid: "",
+  },
   removeroom: {
     roomid: "",
     uid: "",

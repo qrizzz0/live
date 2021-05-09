@@ -135,6 +135,14 @@ io.sockets.on("connection", function (socket) {
   // Websocket for creating new Rooms
   socket.on("createroom", async (req) => {
     var res = {};
+    console.log("Socket.id " + socket.id);
+    console.log("Socket is authorized? " + socket.authorized);
+    if (!socket.authorized) {
+      res.success = false;
+      res.err = "Socket isn't authorized";
+      socket.emit("createroom", res);
+      return;
+    }
     console.log("Validating input.");
     // UserId creating room is sent
     if (!validateInput(req, apiinput.createroom)) {
@@ -202,6 +210,7 @@ io.sockets.on("connection", function (socket) {
       }
 
       res.success = true;
+      res.room = room;
       socket.emit("createroom", res);
     });
   });
@@ -256,31 +265,147 @@ io.sockets.on("connection", function (socket) {
   });
 
   // VALDEMAR NOT TESTED
-  // Websocket for deleting existing rooms.
-  // Only room admin is allowed to remove chatrooms.
-  // UserInfo is sent.
-  // User is found.
-  // Compare user to registered admin.
-  // Remove all messages
-  // if same, then remove room from each user in the room.
-  // and then delete delete room.
-  // else error.
-  socket.on("removeroom", async (req) => {
-    var res = {};
+  // Websocket for adding users to rooms, and vice-versa.
+  socket.on("addroom", async (req) => {
+    res = {};
+    console.log("Socket.id " + socket.id);
+    console.log("Socket is authorized? " + socket.authorized);
+    // KRIS DO THIS
+    if (!socket.authorized) {
+      res.success = false;
+      res.err = "Socket isn't authorized";
+      socket.emit("addroom", res);
+      return;
+    }
+    // Get user and room ids.
+    if (!validateInput(req, apiinput.addroom)) {
+      res.success = false;
+      res.err = "Invalid JSON Request";
+      socket.emit("addroom", res);
+      return;
+    }
+    // Add user to room list.
+    let updated = await RoomModel.updateOne(
+      { _id: req.roomid }, // Filter
+      {
+        // Update
+        $push: {
+          users: req.uid,
+        },
+      }
+    );
+    if (!(updated.nModified > 0)) {
+      res.success = false;
+      res.err = "Room couldn't be identified";
+      socket.emit("addroom", res);
+      return;
+    }
 
+    let room = await RoomModel.findOne({ _id: req.roomid });
+    // Add room to user list.
+    updated = await UserModel.updateOne(
+      { _id: req.uid }, // Filter
+      {
+        // Update
+        $push: {
+          rooms: req.roomid,
+        },
+      }
+    );
+    if (!(updated.nModified > 0)) {
+      res.success = false;
+      res.err = "User couldn't be identified";
+      socket.emit("addroom", res);
+      return;
+    }
+
+    res.success = true;
+    res.room = room;
+    socket.emit("addroom", res);
+    // Send back room to update frontend.
+  });
+
+  //VALDEMAR NOT TESTED
+  // Websocket for removing from room from user.
+  socket.on("removeroom", async (req) => {
+    res = {};
+    console.log("Socket.id " + socket.id);
+    console.log("Socket is authorized? " + socket.authorized);
+    // KRIS DO THIS
+    if (!socket.authorized) {
+      res.success = false;
+      res.err = "Socket isn't authorized";
+      socket.emit("removeroom", res);
+      return;
+    }
+    // Get user and room ids.
     if (!validateInput(req, apiinput.removeroom)) {
       res.success = false;
       res.err = "Invalid JSON Request";
       socket.emit("removeroom", res);
       return;
     }
+    // Remove user from room list.
+    let updated = await RoomModel.updateOne(
+      { _id: req.roomid }, // Filter
+      { $pullAll: { users: [req.uid] } }
+    );
 
+    if (!(updated.nModified > 0)) {
+      res.success = false;
+      res.err = "Room couldn't be removed";
+      socket.emit("removeroom", res);
+      return;
+    }
+    // remove room from user list.
+    updated = await UserModel.updateOne(
+      { _id: req.uid }, // Filter
+      { $pullAll: { rooms: [room._id] } }
+    );
+
+    if (!(updated.nModified > 0)) {
+      res.success = false;
+      res.err = "User couldn't be removed";
+      socket.emit("removeroom", res);
+      return;
+    }
+
+    res.success = true;
+    socket.emit("removeroom", res);
+    // Send back room to update frontend.
+  });
+
+  // VALDEMAR NOT TESTED
+  // Websocket for deleting existing rooms.
+  // Only room admin is allowed to delete chatrooms.
+  // UserInfo is sent.
+  // User is found.
+  // Compare user to registered admin.
+  // delete all messages
+  // if same, then remove room from each user in the room.
+  // and then delete delete room.
+  // else error.
+  socket.on("deleteroom", async (req) => {
+    var res = {};
+
+    if (!validateInput(req, apiinput.removeroom)) {
+      res.success = false;
+      res.err = "Invalid JSON Request";
+      socket.emit("deleteroom", res);
+      return;
+    }
+    if (!socket.authorized) {
+      res.success = false;
+      res.err = "Socket isn't authorized";
+      socket.emit("deleteroom", res);
+      return;
+    }
     let room = await RoomModel.findOne({ _id: req.roomid }).exec();
 
     if (!(room.admin === req.uid)) {
       res.success = false;
       res.err = "User isn't admin, therefore can't delete the chatroom.";
-      socket.emit("removeroom", res);
+      socket.emit("deleteroom", res);
       return;
     }
 
@@ -293,19 +418,19 @@ io.sockets.on("connection", function (socket) {
     if (!(deleted.deletedCount > 0)) {
       res.success = false;
       res.err = "Messages couldn't be deleted";
-      socket.emit("removeroom", res);
+      socket.emit("deleteroom", res);
       return;
     }
 
     // Remove the room object from the list user room, in each user.
     let updated = await UserModel.updateMany(
       { _id: { $in: room.users } },
-      { $pull: { rooms: { _id: room._id } } }
+      { $pullAll: { rooms: [room._id] } }
     );
     if (!(updated.nModified > 0)) {
       res.success = false;
       res.err = "Messages couldn't be deleted";
-      socket.emit("removeroom", res);
+      socket.emit("deleteroom", res);
       return;
     }
 
@@ -314,24 +439,24 @@ io.sockets.on("connection", function (socket) {
       if (err) {
         res.success = false;
         res.err = err;
-        socket.emit("removeroom", res);
+        socket.emit("deleteroom", res);
         return;
       }
       res.success = true;
-      socket.emit("removeroom", res);
+      socket.emit("deleteroom", res);
     });
   });
 
   // VALDEMAR NOT TESTED
-  // Websocket for joining rooms.
+  // Websocket for joining rooms. Joins the socket to a room.
   // UserInfo is sent.
   // Find the linked room.
   // Add user to its list.
   // Send back list of messages.
   socket.on("joinroom", async (req) => {
     res = {};
+    console.log("Socket.id " + socket.id);
     console.log("Socket is authorized? " + socket.authorized);
-
     // KRIS DO THIS
     if (!socket.authorized) {
       res.success = false;
@@ -346,51 +471,42 @@ io.sockets.on("connection", function (socket) {
       socket.emit("joinroom", res);
       return;
     }
+    // Find room.
 
-    // Add user to room list.
-    let updated = await RoomModel.updateOne(
-      { _id: req.roomid }, // Filter
-      {
-        // Update
-        $push: {
-          users: req.uid,
-        },
-      }
-    );
-    if (!(updated.nModified > 0)) {
+    let room = await RoomModel.findOne({ _id: req.roomid }).exec();
+    if (room === null) {
       res.success = false;
       res.err = "Room couldn't be identified";
       socket.emit("joinroom", res);
       return;
     }
-
-    // Add room to user list.
-    updated = await UserModel.updateOne(
-      { _id: req.uid }, // Filter
-      {
-        // Update
-        $push: {
-          rooms: req.roomid,
-        },
-      }
-    );
-    if (!(updated.nModified > 0)) {
+    // Find user.
+    let user = await UserModel.findOne({ _id: req.uid }).exec();
+    if (user === null) {
       res.success = false;
       res.err = "User couldn't be identified";
       socket.emit("joinroom", res);
       return;
     }
-    console.log(user);
-    console.log(room);
 
+    // Is user part of the room and is the room part of room.
+    console.log("Room contains user? " + room.users.includes(req.uid));
+    console.log("User contains room? " + user.rooms.includes(req.roomid));
+    if (!(room.users.includes(req.uid) || user.rooms.includes(req.roomid))) {
+      res.success = false;
+      res.err = "Either user wasn't a part of the room, or the reverse";
+      socket.emit("joinroom", res);
+      return;
+    }
     res.success = true;
     res.room = room;
+    socket.join(room._id);
     socket.emit("joinroom", res);
     // Send back list of messages.
   });
 
   // VALDEMAR NOT TESTED
-  // Websocket for leaving rooms.
+  // Websocket for leaving rooms. Removes the socket from the room.
   // UserInfo is sent.
   // Find the wished room.
   // remove user from room.
@@ -407,28 +523,45 @@ io.sockets.on("connection", function (socket) {
     // Remove user from the room.
     let updated = await RoomModel.updateOne(
       { _id: req.roomid },
-      { $pull: { users: { _id: req.uid } } }
+      { $pullAll: { users: [req.uid] } } // <--- Notice the array of userid. It is how you use it.
     );
+
     if (!(updated.nModified > 0)) {
       res.success = false;
       res.err = "User couldn't be removed from the room";
       socket.emit("leaveroom", res);
       return;
     }
+    // Find room.
 
-    // Remove room from the user.
-    updated = await UserModel.updateOne(
-      { _id: req.uid },
-      { $pull: { rooms: { _id: req.roomid } } }
-    );
-    if (!(updated.nModified > 0)) {
+    let room = await RoomModel.findOne({ _id: req.roomid }).exec();
+    if (room === null) {
       res.success = false;
-      res.err = "Room couldn't be removed from the user";
-      socket.emit("leaveroom", res);
+      res.err = "Room couldn't be identified";
+      socket.emit("joinroom", res);
+      return;
+    }
+    // Find user.
+    let user = await UserModel.findOne({ _id: req.uid }).exec();
+    if (user === null) {
+      res.success = false;
+      res.err = "User couldn't be identified";
+      socket.emit("joinroom", res);
+      return;
+    }
+
+    // Is user part of the room and is the room part of room.
+    console.log("Room contains user? " + room.users.includes(req.uid));
+    console.log("User contains room? " + user.rooms.includes(req.roomid));
+    if (!(room.users.includes(req.uid) || user.rooms.includes(req.roomid))) {
+      res.success = false;
+      res.err = "Either user wasn't a part of the room, or the reverse";
+      socket.emit("joinroom", res);
       return;
     }
 
     res.success = true;
+    socket.leave(room._id);
     socket.emit("leaveroom", res);
   });
 
