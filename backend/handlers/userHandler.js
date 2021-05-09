@@ -1,14 +1,28 @@
-var tool = require("../server.js");
+/*
+  API CALLS:
+  signup: This is for creating a new user in the database. NON-AUTHORIZED
+  login: This is for logging in an existing user. This is also the function to authorize the socket the user is using. NON-AUTHORIZED
+  getuserinfo: This is for returning sorted userinfo for clients. In case of friend functions all userinfo shouldn't be returned: NON-AUTHORIZED
+*/
 var UserModel = require("../models/user.js");
 var mongoose = require("mongoose");
 const apiinput = require("../validators/APIvalidators");
 const basicUserInfo = ["username", "email"];
 
+// Validate mail format, by matching with RFC 2822 standard regex.
+// Return boolean.
+// https://stackoverflow.com/questions/46155/how-to-va lidate-an-email-address-in-javascript
+function validateMail(mail) {
+  var rfc2822regex = /[a-z0-9!#$%&'*+/=?^_`{|}~-]+(?:\.[a-z0-9!#$%&'*+/=?^_`{|}~-]+)*@(?:[a-z0-9](?:[a-z0-9-]*[a-z0-9])?\.)+[a-z0-9](?:[a-z0-9-]*[a-z0-9])?/;
+  return rfc2822regex.test(mail);
+}
+
 class UserHandler {
+  // KRIS Signup doesn't authorize the socket. And therefore needs to run login after signup.
   async signup(socket, req) {
     var res = {};
     // Get signup information about the new user.
-    if (!tool.validateInput(req, apiinput.signup)) {
+    if (!apiinput.validateInput(req, apiinput.validators.signup)) {
       res.success = false;
       res.err = "Invalid JSON Request";
       socket.emit("signup", res);
@@ -18,7 +32,7 @@ class UserHandler {
     newuser._id = new mongoose.Types.ObjectId();
 
     // Validate mailstring
-    if (!tool.validateMail(newuser.email)) {
+    if (!validateMail(newuser.email)) {
       res.success = false;
       res.err = "Not a valid email format";
       socket.emit("signup", res);
@@ -49,6 +63,7 @@ class UserHandler {
       .save()
       .then((r) => {
         res.success = true;
+        res.user = r;
         socket.emit("signup", res);
       })
       .catch((err) => {
@@ -62,7 +77,7 @@ class UserHandler {
   async login(socket, req) {
     var res = {};
 
-    if (!tool.validateInput(req, apiinput.login)) {
+    if (!apiinput.validateInput(req, apiinput.validators.login)) {
       res.success = false;
       res.err = "Invalid JSON Request";
       socket.emit("login", res);
@@ -74,7 +89,7 @@ class UserHandler {
 
     let doc = {};
 
-    if (tool.validateMail(user.login)) {
+    if (validateMail(user.login)) {
       doc = await UserModel.findOne({ email: user.login }).exec();
       if (doc === null) {
         // no user found
@@ -99,6 +114,8 @@ class UserHandler {
       // Emit true if authenticated.
       res.success = true;
       res.user = doc;
+      // KRIS This is where we authorize the specific socket. They need to use the login API and provide the login information in order to get their socket authorized.
+      // Sockets themselves are consistent server_side and bound to specific socket ids. The authorized attribute is not send to client.
       socket.authorized = true;
       socket.emit("login", res);
     } else {
@@ -115,7 +132,7 @@ class UserHandler {
     // UserID is sent.
     var res = {};
     // Get userID information about the new user.
-    if (tool.validateInput(req, apiinput.getuserinfo)) {
+    if (apiinput.validateInput(req, apiinput.validators.getuserinfo)) {
       res.success = false;
       res.err = "Invalid JSON Request";
       socket.emit("getuserinfo", res);
