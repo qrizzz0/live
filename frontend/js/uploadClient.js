@@ -1,9 +1,11 @@
 class WebSocketUploaderClient {
-  constructor(socket, file, sliceSize) {
+  constructor(socket, file, sliceSize, uid, roomid) {
     this.socket = socket;
     this.file = file;
     this.sliceSize = sliceSize;
     this.id = "" + Date.now() + Math.floor(Math.random() * 10000); //fordi "" bliver det til en streng og de to tal bliver konkateneret
+    this.uid = uid;
+    this.roomid = roomid;
   }
 
   getId() {
@@ -22,6 +24,8 @@ class WebSocketUploaderClient {
       console.log("md5 is: " + hash);
       socket.emit('upload first slice', {
         name: file.name,
+        uid: this.uid,
+        roomid: this.roomid,
         id: this.id,
         type: file.type,
         sliceID: 0,

@@ -6,17 +6,18 @@ var fs = require('fs');
 class WebSocketUploader {
     currentUploads = {};
     
-    constructor(socket, messageHandler) {
+    constructor(socket, messageHandler, username) {
         this.socket = socket;
         this.messageHandler = messageHandler;
-
 
         this.initializeRoutes();
     }
 
     initializeRoutes() {
         this.socket.on('upload first slice', function (input) {
-            this.processFirstSlice(input);
+            if (this.socket.authorized === true) { 
+                this.processFirstSlice(input);
+            }
         }.bind(this));
         
         this.socket.on('upload next slice', function (input) {

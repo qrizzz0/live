@@ -26,6 +26,9 @@ class WebSocketFileUpload {
         this.fileName = this.id + "." + this.extension;
 
         this.slices = 0;
+
+        this.uid = fileInput.uid;
+        this.roomid = fileInput.roomid;
     }
 
     //Currently we save entire file in RAM before writing to disk. To support very large files (100mb+) we should probably write to disk
@@ -91,14 +94,14 @@ class WebSocketFileUpload {
 
     broadcastMessageToRoom() {
         if (imageExtensions.includes(this.extension)) {
-            this.messageHandler.broadcastMessage(this.socket, this.messageHandler.getNameFromSocket(this.socket), 
-            '<img class="chatImage" src="data/' + this.fileName + '">', this.mongoID);
+            this.messageHandler.messageWithDB(this.socket, this.uid, 
+            '<img class="chatImage" src="data/' + this.fileName + '">', this.mongoID, this.roomid);
         } else if(videoExtensions.includes(this.extension)) {
-            this.messageHandler.broadcastMessage(this.socket, this.messageHandler.getNameFromSocket(this.socket), 
-            '<video controls id="chatVideo" src="data/' + this.fileName + '">', this.mongoID);
+            this.messageHandler.messageWithDB(this.socket, this.uid, 
+            '<video controls id="chatVideo" src="data/' + this.fileName + '">', this.mongoID, this.roomid);
         } else {
-            this.messageHandler.broadcastMessage(this.socket, this.messageHandler.getNameFromSocket(this.socket), 
-            'Uploaded file: <a target="_blank" href="data/' + this.fileName + '">' + this.originalName + '</a>', this.mongoID);
+            this.messageHandler.messageWithDB(this.socket, this.uid, 
+            'Uploaded file: <a target="_blank" href="data/' + this.fileName + '">' + this.originalName + '</a>', this.mongoID, this.roomid);
         }
     }
 

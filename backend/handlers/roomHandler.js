@@ -378,11 +378,10 @@ class RoomHandler {
 		// KRIS Gave functionality to leave and join socket rooms dependent on socket.authorized. rooms names are their id.
 		socket.join(req.roomid);
 
-		this.messageHandler.broadcastMessage(
+		this.messageHandler.messageWithoutDB(
 			socket,
-			"system",
+			"System",
 			user.username + " has joined",
-			null,
 			req.roomid
 		);
 		socket.emit("joinroom", res);

@@ -49,24 +49,10 @@ io.sockets.on("connection", function (socket) {
 	new WebSocketUploader(socket, messageHandler); //Kris will connect this to datasbase
 
 	//for disconnection SKAL FIKSES
-	/*socket.on("disconnect", function () {
-		var userdata = clientInfo[socket.id];
-		if (typeof (userdata !== undefined)) {
-			//socket.leave(userdata.room); // leave the room
-			//broadcast leave room to only memebers of same room
-			socket.broadcast.to(userdata.room).emit("message", {
-				text: userdata.name + " has left",
-				name: "System",
-				timestamp: moment().valueOf(),
-			});
-			console.log(
-				"User: " + userdata.name + " has left" + " from room: " + userdata.room
-			);
-			// delete user data-
-			delete clientInfo[socket.id];
-		}
+	socket.on("disconnect", function () {
+		socket.authorized = false;
 	});
-*/
+
 	socket.on("login", function (req) {
 		userHandler.login(socket, req);
 	});
@@ -192,7 +178,7 @@ io.sockets.on("connection", function (socket) {
 		if (room.err == null && message.err == null) {
 			if (req.userID == room.admin || req.userID == message.sender) {
 				if (message.file.exists()) {
-					// Slet fil  SKAL LAVES !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+					WebSocketUploader.deleteFile(message.file);
 					console.log("File:" + message.file + " deleted");
 				}
 
@@ -217,9 +203,6 @@ io.sockets.on("connection", function (socket) {
 	socket.on("LogInToSocket", function (req) {
 		roomHandler.LogIn(socket, req);
 	});
-
-	// Room welcome message
-	messageHandler.message(socket, "System", "Welcome to Chat Application !");
 
 	// listen for client typing messages
 	socket.on("typing", function (message) {

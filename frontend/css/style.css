@@ -100,3 +100,7 @@ select::-webkit-scrollbar {
 	height: 100%;
 	background-color: green;
 }
+
+.chatImage {
+	max-width: 100%;
+}

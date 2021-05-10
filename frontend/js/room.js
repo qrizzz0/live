@@ -2,7 +2,7 @@ var socket = io.connect("https://websocket.sovsehytten.tk");
 
 socket.on("connect", function () {
 	let userInfo = getCookieID();
-	if (userInfo == null) {
+	if (userInfo === null) {
 		alert("You cannot access the chat module when not logged in!");
 		window.location.replace("/login.html");
 	}

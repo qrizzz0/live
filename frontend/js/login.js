@@ -16,7 +16,7 @@ function checkCookieID() {
   if (getCookieID() === null) {
     console.log("User has no CookieID");
   } else {
-    //window.location.replace("/room.html");
+    window.location.replace("/room.html");
   }
 }
 

@@ -20,7 +20,7 @@ function getCookieID() {
 console.log("Local storage: ", getRoomCookie());
 
 console.log("RoomID: ", getRoomCookie());
-document.getElementById("room-title").innerHTML = getRoomCookie().name;
+
 //$(".room-title").text(getRoomCookie().name);
 
 // fires when client successfully conencts to the server
@@ -31,13 +31,14 @@ socket.on("connect", function () {
 	// to join a specific room
 	let userInfo = getCookieID();
 	let roomInfo = getRoomCookie();
-	if (userInfo == null) {
+	if (userInfo === null) {
 		alert("You cannot access the chat module when not logged in!");
 		window.location.replace("/login.html");
-	} else if (roomInfo == null) {
+	} else if (roomInfo === null) {
 		alert("You cannot access the chat module without choosing a room!");
 		window.location.replace("/room.html");
 	}
+	document.getElementById("room-title").innerHTML = getRoomCookie().name;
 	socket.emit("login", {
 		login: userInfo.email,
 		hashed_password: userInfo.hashed_password,
@@ -60,6 +61,7 @@ socket.on("joinroom", (res) => {
 		console.log("Successfully joined room");
 		socket.emit("getallmessages", { roomid: getRoomCookie()._id });
 	} else {
+		alert("Joinroom ERR: " + res.err);
 		console.log("Joinroom ERR: " + res.err);
 	}
 });
@@ -71,22 +73,16 @@ socket.on("getallmessages", (res) => {
 			var allMessages = $(".messages");
 			var currentMessage = $('<li class = "list-group-item"></li>');
 
-			var momentTimestamp = moment.utc(item.timestamp).local().format("h:mm a");
+			var momentTimestamp = moment
+				.utc(item.timestamp)
+				.local()
+				.format("DD-MM-YY HH:mm a");
 			//$(".messages").append($('<p>').text(message.text));
 			currentMessage.append(
-				"<strong>" + momentTimestamp + " " + item.sender + "</strong>"
+				"<strong>" + momentTimestamp + " " + item.sender.username + "</strong>"
 			);
 			currentMessage.append("<p>" + item.text + "</p>");
 			allMessages.append(currentMessage);
-			// handle autoscroll
-			// manage autoscroll
-			var obj = $("ul.messages.list-group");
-			var offset = obj.offset();
-			var scrollLength = obj[0].scrollHeight;
-			//  offset.top += 20;
-			$("ul.messages.list-group").animate({
-				scrollTop: scrollLength - offset.top,
-			});
 		});
 	} else {
 		console.log("Getallmessages ERR: " + res.err);
@@ -161,7 +157,13 @@ function uploadFileBetter() {
 		} else {
 			for (var i = 0; i < fileInput.files.length; i++) {
 				var file = fileInput.files[i];
-				var uploader = new WebSocketUploaderClient(socket, file, 100000);
+				var uploader = new WebSocketUploaderClient(
+					socket,
+					file,
+					100000,
+					getCookieID()._id,
+					getRoomCookie()._id,
+				);
 				uploader.uploadFirstSlice();
 				currentUploads[uploader.getId()] = uploader; //Save the WebSocketUploaderClient in the array of uploads
 			}
@@ -214,10 +216,14 @@ socket.on("message", function (message) {
 	var momentTimestamp = moment
 		.utc(message.msg.timestamp)
 		.local()
-		.format("h:mm a");
+		.format("DD-MM-YY HH:mm a");
 	//$(".messages").append($('<p>').text(message.text));
 	currentMessage.append(
-		"<strong>" + momentTimestamp + " " + message.msg.sender + "</strong>"
+		"<strong>" +
+			momentTimestamp +
+			" " +
+			message.msg.sender.username +
+			"</strong>"
 	);
 	currentMessage.append("<p>" + message.msg.text + "</p>");
 	allMessages.append(currentMessage);
