@@ -68,18 +68,17 @@ socket.on("getallrooms", (res) => {
 			// var thisIssBullshiet = document.createElement("li");
 			var allRooms = document.createElement("li");
 			var textnode = document.createTextNode(item.name);
-			allRooms.appendChild(textnode);
 			allRooms.setAttribute("class", "rooms");
 			var currentRoom = document.createElement("input");
 			var roomInfo = document.createTextNode(JSON.stringify(item));
 			currentRoom.setAttribute("type", "radio");
 			currentRoom.setAttribute("name", "room");
-
 			currentRoom.setAttribute("class", "radioBtn");
 			currentRoom.setAttribute("value", item.name);
 			currentRoom.appendChild(roomInfo);
 
 			allRooms.appendChild(currentRoom);
+			allRooms.appendChild(textnode);
 			// thisIssBullshiet.appendChild(allRooms);
 			document.getElementById("list-group").appendChild(allRooms);
 		});

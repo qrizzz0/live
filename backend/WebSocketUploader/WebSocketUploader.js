@@ -1,3 +1,5 @@
+//Slicingteknikken i denne uploader er baseret på hvad de har beskrevet i artiklen her: https://medium.com/@Mewsse/file-upload-with-socket-io-9d2d1229494
+
 const FileModel = require("../models/file");
 const mongoose = require("mongoose");
 var WebSocketFileUpload = require('./WebSocketFileUpload.js');

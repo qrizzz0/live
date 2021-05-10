@@ -36,7 +36,7 @@ class WebSocketFileUpload {
         // Do sanity checks of the slice - if something is weird we abort the transfer.
         // This could be replaced with progressive hashing.
         var hash = md5(slice.data);
-        console.log("hash: "+hash);
+        console.log("hash: " + hash);
         if (slice.data == null || slice.datahash != hash) {
             console.log("Something wrong with a slice of data for file: " + this.id + " - Aborting.")
             console.log("Slice hash: " + slice.datahash + " Calculated hash: " + hash)
