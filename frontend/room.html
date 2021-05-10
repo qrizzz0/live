@@ -20,41 +20,40 @@
   <body>
     <div class="vertical-center">
       <div class="container-fluid">
-        <div class="row">
-          <div class="col-md-4 col-md-offset-4 well">
-            <h1 class="text-center" id="header-text">!</h1>
-            <form action="/chat.html" class="">
+        <div class="col-md-4 col-md-offset-4 well">
+          <h1 class="text-center" id="header-text">!</h1>
+          <form onsubmit="return false;" class="">
+            <div class="form-group"> 
               <a class="btn btn-primary" onclick="redirectToLogin()">
                 <i class="bi bi-box-arrow-left"></i>
                 Go Back
               </a> 
-
-              <div class="form-group"> 
+              <div class="search-rooms">
                 <label for="room"> <br> Search Room:</label>
-                <div class="search-rooms">
-                  <input class="form-control" id="search" name="search" placeholder="Search for rooms.." type="text" onkeyup="searchRooms()"> <br>
-                </div>
+                <input class="form-control" id="search" name="search" placeholder="Search for rooms.." type="text" onkeyup="searchRooms()"> <br>
+              </div>
+              
+              <div class="create-rooms">
                 <label for="room">Create Room:</label>
-                <div class="create-rooms">
-                  <input class="form-control" id="create" name="create" placeholder="" type="text"> <br>
-                  <a class="btn btn-primary" onclick="createRooms()">
-                    <i class="bi bi-box-login"></i>
-                    Create room
-                  </a> 
-                </div>
-
-                <div class="lists-group"> 
-                  <ul id="list-group"></ul>
-                </div>
+                <input class="form-control" id="create" name="create" placeholder="" type="text"> <br>
+                <a class="btn btn-primary" onclick="createRooms()">
+                  <i class="bi bi-box-login"></i>
+                  Create room
+                </a> 
               </div>
 
-              <div class="form-group">
-                <input class="btn btn-primary btn-block" type="submit" value="Join Room"/>
+              <div class="lists-group"> 
+                <ul id="list-group"></ul>
               </div>
+            </div> 
+            <br>
 
-            </form>
+            <div class="form-group">
+              <input class="btn btn-primary btn-block" type="submit" value="Join Room" onclick="redirectToChat()" />
+            </div>
 
-          </div>
+          </form>
+
         </div>
       </div>
     </div>

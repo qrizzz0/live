@@ -22,7 +22,7 @@
           <div class="col-md-4 col-md-offset-4 well">
             <h1 class="text-center">
               Chat Application !</h1>
-            <form action="/room.html">
+            <form onsubmit="return false;">
               <div class="form-group">
                 <label for="email">
                 Email:</label>
@@ -34,13 +34,14 @@
                   <p id="valid1"></p>  
                 </div>
               </div>
-
-              Password:</label>
+              <br>
+              <label for="password">Password:</label>
               <div class="input-group">
+                
                 <span class="input-group-addon">
                   <i class="bi bi-lock-fill"></i>
                 </span>
-                <input class="form-control" id="myPassword" placeholder="" type="password" required>
+                <input class="form-control" id="myPassword" name="password" placeholder="" type="password" required>
                 <p id="valid2"></p>  
               </div>
               <input type="checkbox" onclick="showPassword()"> Show Password 

@@ -26,6 +26,9 @@ class WebSocketFileUpload {
         this.fileName = this.id + "." + this.extension;
 
         this.slices = 0;
+
+        this.uid = fileInput.uid;
+        this.roomid = fileInput.roomid;
     }
 
     //Currently we save entire file in RAM before writing to disk. To support very large files (100mb+) we should probably write to disk
@@ -37,7 +40,7 @@ class WebSocketFileUpload {
         if (slice.data == null || slice.datahash != hash) {
             console.log("Something wrong with a slice of data for file: " + this.id + " - Aborting.")
             console.log("Slice hash: " + slice.datahash + " Calculated hash: " + hash)
-            this.endUpload();
+            this.endUpload(false);
             return -1;
         }
 
@@ -52,7 +55,8 @@ class WebSocketFileUpload {
             this.requestNextSlice();
         } else {
             //File upload is finished!
-            this.endUpload();
+            this.mongoID = new mongoose.Types.ObjectId();
+            this.endUpload(true);
             this.saveFile();
             this.broadcastMessageToRoom();
             return 1;
@@ -72,7 +76,7 @@ class WebSocketFileUpload {
     saveToDatabase() {
         var file = new FileModel();
 
-        file._id = new mongoose.Types.ObjectId();
+        file._id = this.mongoID;
         file.fileName = this.fileName;
         file.originalName = this.originalName;
         file.path = this.filePath;
@@ -83,7 +87,6 @@ class WebSocketFileUpload {
           if (err) {
             res.success = false;
             res.err = err;
-            socket.emit("createroom", res);
             return;
           }
         });
@@ -91,11 +94,14 @@ class WebSocketFileUpload {
 
     broadcastMessageToRoom() {
         if (imageExtensions.includes(this.extension)) {
-            this.messageHandler.sendMessageToRoom(this.socket, this.messageHandler.getNameFromSocket(this.socket), 
-            '<img class="chatImage" src="data/' + this.fileName + '">')
+            this.messageHandler.messageWithDB(this.socket, this.uid, 
+            '<img class="chatImage" src="data/' + this.fileName + '">', this.mongoID, this.roomid);
+        } else if(videoExtensions.includes(this.extension)) {
+            this.messageHandler.messageWithDB(this.socket, this.uid, 
+            '<video controls id="chatVideo" src="data/' + this.fileName + '">', this.mongoID, this.roomid);
         } else {
-            this.messageHandler.sendMessageToRoom(this.socket, this.messageHandler.getNameFromSocket(this.socket), 
-            'A user has uploaded a file: <a target="_blank" href="data/' + this.fileName + '">' + this.originalName + '</a>');
+            this.messageHandler.messageWithDB(this.socket, this.uid, 
+            'Uploaded file: <a target="_blank" href="data/' + this.fileName + '">' + this.originalName + '</a>', this.mongoID, this.roomid);
         }
     }
 
@@ -114,6 +120,7 @@ class WebSocketFileUpload {
     endUpload() {
         this.socket.emit('end upload', {
             id: this.id,
+            success: this.success,
         });
     }
 
@@ -121,42 +128,3 @@ class WebSocketFileUpload {
 
 
 module.exports = WebSocketFileUpload
-
-
-
-
-
-
-
-
-/*socket.on('upload slice', function(input) {
-    var userInfo = clientInfo[socket.id];
-    console.log("Nice nice.")
-    if (!files[input.name]) {
-      files[input.name] = Object.assign({}, struct, input);  //Lav ny files (struct) med navn data.name
-      files[input.name].data = [];
-    }
-
-    input.data = new Buffer(new Uint8Array(input.data)); //Fix buffer til hvad end man bruger i dag
-
-    files[input.name].data.push(input.data);
-    files[input.name].slice++;
-
-    if (files[input.name].slice * 100000 >= files[input.name].size) {  //Hvis vi ændrer slice størrelse skal den ændres her
-      //do something with the data
-      socket.emit('end upload');
-      fs.writeFile('/home/cloud/live/frontend/data/' + files[input.name].name, files[input.name].data[0], FileSaveCallback);
-      console.log("data er blevet uploadet. Nice nice.")
-    } else {
-      socket.emit('request slice upload', {
-          currentSlice: files[input.name].slice
-      });
-    }
-
-    io.in(userInfo.room).emit("message", {
-      text: input.name + " was sent" + " from user: " + userInfo.name,
-      name: "System",
-      timestamp: moment().valueOf()
-    });
-
-});*/

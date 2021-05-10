@@ -27,7 +27,7 @@
       <div class="row">
         <div class="col-md-6 col-md-offset-3 well">
           <!-- <a href="/index.html">Change Settings</a> -->
-          <a class="btn btn-primary" href="/room.html">
+          <a class="btn btn-primary" onclick="redirectToRoom()">
             <i class="bi bi-box-arrow-left"></i>
             Exit</a>
           <h1 class="room-title text-center" id="room-title"></h1>
@@ -49,10 +49,16 @@
               <input class="btn btn-default btn-block" type="submit"/>
             </div>            
           </form>
-          <form id="send-file" onsubmit="uploadFileBetter();return false" > <!--enctype = type of encryption-->
-            <input type="file" style="display:inline" id="file"/>
-            <input type="submit" value="Send file123"/>
-          </form>
+          <div id = fileUpload>
+            <p>Upload file to room:</p>
+            <form id="send-file" onsubmit="uploadFileBetter();return false" > <!--enctype = type of encryption-->
+              <input type="file" style="display:inline" id="file"/>
+              <input type="submit" value="Send file"/>
+            </form>
+            <div id="progressBar" hidden>
+            <div id="movingBar"></div>
+          </div>
+        </div>
         </div>
       </div>
     </div>
