@@ -45,17 +45,17 @@ let loginUser0 = {
 	hashed_password: "Bubber",
 };
 
-function connect() {
-	//await sleep(1000);
-	socket.emit("signin", validuser0);
-	//await sleep(1000);
-	socket.emit("signin", validuser1);
-	//await sleep(1000);
+async function connect() {
+	await sleep(1000);
+	socket.emit("signup", validuser0);
+	await sleep(1000);
+	socket.emit("signup", validuser1);
+	await sleep(1000);
 	socket.emit("login", loginUser0);
-	//await sleep(1000);
+	await sleep(1000);
 }
 
-function testFriend() {
+async function testFriend() {
 	let addFriend = {
 		userID: answer.user._id,
 		friendName: "Anders",
@@ -69,9 +69,9 @@ function testFriend() {
 	};
 
 	socket.emit("modFriend", addFriend);
-	//await sleep(1000);
+	await sleep(1000);
 	socket.emit("modFriend", removeFriend);
-	//await sleep(1000);
+	await sleep(1000);
 
 	socket.disconnect();
 }

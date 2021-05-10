@@ -2,16 +2,15 @@ const io = require("socket.io-client");
 var socket = io.connect("http://localhost:3005");
 
 var answer;
-var email = "theis1@linux.com";
-var username = "theis1";
-var pass = "theis1";
+var email = "theis0@linux.com";
+var username = "theis0";
+var pass = "theis0";
 
 function sleep(ms) {
 	return new Promise((resolve) => {
 		setTimeout(resolve, ms);
 	});
 }
-
 socket.on("connect", () => {
 	test();
 });
@@ -21,12 +20,17 @@ socket.on("signup", (res) => {
 });
 
 socket.on("login", (res) => {
+	console.log("login");
 	console.log(res);
 	answer = res;
 	test2();
 });
 
 socket.on("createroom", (res) => {
+	console.log(res);
+});
+
+socket.on("removeroom", (res) => {
 	console.log(res);
 });
 
@@ -45,17 +49,9 @@ async function test2() {
 	});
 	await sleep(1000);
 
-	// succes: false - error in object uid
-	socket.emit("createroom", {
-		uid: "notWorking",
-		name: "ChatRoomTest",
-	});
-	await sleep(1000);
-
-	// succes: false - uid does not exist in database
-	socket.emit("createroom", {
-		uid: "608d3c2bd148e810166b1df1",
-		name: "ChatRoomTest",
+	socket.emit("joinroom", {
+		uid: answer.user._id,
+		roomid: "ChatRoomTest",
 	});
 	await sleep(1000);
 
